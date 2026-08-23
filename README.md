@@ -3,6 +3,8 @@
 Nuke gizmos and tools from **Pixel Eye Pictures**. Free to use and modify
 under the GPL-3.0 license (see `LICENSE`).
 
+_These tools are made with keeping freelancers in mind._
+
 **Nuke 14+** — built and tested in Nuke 14 (Python 3; PySide2 with a PySide6
 fallback for Nuke 15+).
 
