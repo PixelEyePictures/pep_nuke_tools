@@ -5,6 +5,8 @@ under the GPL-3.0 license (see `LICENSE`).
 
 _These tools are made with keeping freelancers in mind._
 
+📖 **Full per‑tool help:** [HELP.md](HELP.md) (also available in‑app — Help tab / Help button).
+
 **Nuke 14+** — built and tested in Nuke 14 (Python 3; PySide2 with a PySide6
 fallback for Nuke 15+).
 
