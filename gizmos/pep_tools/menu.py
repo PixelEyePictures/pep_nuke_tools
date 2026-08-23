@@ -18,3 +18,5 @@ _m.addCommand("Marker Cleanup",
               "import pep_marker_cleanup as mc; mc.launch_marker_cleanup()")
 _m.addCommand("Read Node Manager",
               "import pep_read_manager as rm; rm.launch_read_manager()")
+_m.addCommand("TagRename (rename on disk)",
+              "import pep_tagrename as tr; tr.launch_tagrename()")

@@ -12,6 +12,10 @@
   markers: luminance-key -> grow -> surrounding-screen fill).
 - **Read Node Manager** (`pep_read_manager`): list/enable/disable all Reads and
   batch-relink paths (find/replace with scope, or per-node edit).
+- **TagRename** (`pep_tagrename`): rename rendered files on disk (single /
+  sequence / batch) and relink the node; rename-only, previews, no overwrite.
+- **Marker Cleanup**: "Compare combinations" button (contact sheet of every
+  channel swap so you can pick the best).
 - **Fringe Fix** gizmo (`PEP_FringeFix`): channel-clamp de-fringe + chroma-shift
   realign, per selectable channel, with a mix control.
 - **Help** in every tool (Help tab on gizmos; Help button on the panels).

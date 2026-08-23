@@ -236,6 +236,57 @@ def build_patch_network(plate, fill_size=40, grow=3):
     return over
 
 
+def build_compare_combos(plate):
+    """Build a labeled contact sheet of every channel-swap combo off the plate,
+    so the artist can eyeball which swap neutralizes the markers. Scratch nodes
+    the artist can delete after choosing."""
+    x, y = plate.xpos(), plate.ypos()
+    src = nuke.nodes.Dot(name="MC_cmp_src", xpos=x + 34, ypos=y + 80)
+    src.setInput(0, plate)
+
+    fmt = plate.format()
+    tiles = []
+    combos = [(d, s) for d in CHANNELS for s in CHANNELS if d != s]  # 6
+    for i, (dmg, dnr) in enumerate(combos):
+        sh = nuke.nodes.Shuffle(name="MC_cmp_%s_%s" % (dmg, dnr))
+        sh.setInput(0, src)
+        sh[dmg].setValue(dnr)
+        sh.setXYpos(src.xpos() + (i % 3) * 120, src.ypos() + 60 + (i // 3) * 60)
+        t = nuke.nodes.Text2(name="MC_cmplbl_%d" % i)
+        t.setInput(0, sh)
+        t["message"].setValue("%s <- %s" % (dmg, dnr))
+        try:
+            t["global_font_scale"].setValue(0.5)
+            t["xjustify"].setValue("left"); t["yjustify"].setValue("top")
+            t["box"].setValue([20, 20, fmt.width() - 20, fmt.height() - 20])
+        except Exception:  # noqa: BLE001
+            pass
+        t.setXYpos(sh.xpos(), sh.ypos() + 30)
+        tiles.append(t)
+
+    cs = nuke.nodes.ContactSheet(name="MC_Compare")
+    cs["width"].setValue(fmt.width() * 3)
+    cs["height"].setValue(fmt.height() * 2)
+    cs["rows"].setValue(2); cs["columns"].setValue(3)
+    for i, t in enumerate(tiles):
+        cs.setInput(i, t)
+    cs.setXYpos(src.xpos(), src.ypos() + 260)
+    cs["label"].setValue("Marker channel-swap compare\n(pick a combo, then Build)")
+
+    bd = nuke.nodes.BackdropNode(name="MC_CompareBackdrop")
+    bd["label"].setValue("PEP Marker Cleanup - Compare combos")
+    bd["note_font_size"].setValue(24); bd["tile_color"].setValue(0x446633ff)
+    left = src.xpos() - 60; top = src.ypos() - 90
+    right = src.xpos() + 3 * 120 + 200; bottom = cs.ypos() + 120
+    bd["xpos"].setValue(left); bd["ypos"].setValue(top)
+    bd["bdwidth"].setValue(right - left); bd["bdheight"].setValue(bottom - top)
+
+    for n in nuke.selectedNodes():
+        n["selected"].setValue(False)
+    cs["selected"].setValue(True)
+    return cs
+
+
 # --------------------------------------------------------------------------- #
 # Help
 # --------------------------------------------------------------------------- #
@@ -342,9 +393,11 @@ class MarkerCleanupDialog(QtWidgets.QDialog):
 
         btns = QtWidgets.QHBoxLayout()
         self.help_btn = QtWidgets.QPushButton("Help")
+        self.compare_btn = QtWidgets.QPushButton("Compare combinations")
         self.build_btn = QtWidgets.QPushButton("Build Network")
         self.cancel_btn = QtWidgets.QPushButton("Cancel")
         btns.addWidget(self.help_btn)
+        btns.addWidget(self.compare_btn)
         btns.addStretch()
         btns.addWidget(self.cancel_btn)
         btns.addWidget(self.build_btn)
@@ -354,6 +407,7 @@ class MarkerCleanupDialog(QtWidgets.QDialog):
         self.preset.currentTextChanged.connect(self._apply_preset)
         self.build_btn.clicked.connect(self._build)
         self.cancel_btn.clicked.connect(self.reject)
+        self.compare_btn.clicked.connect(self._compare)
         self.help_btn.clicked.connect(lambda: _show_help(self, "Marker Cleanup - Help", _HELP_HTML))
         self._apply_preset(self.preset.currentText())
         self._sync_method()
@@ -367,6 +421,21 @@ class MarkerCleanupDialog(QtWidgets.QDialog):
             w.setEnabled(swap)
         for w in (self.fill_size, self.grow):
             w.setEnabled(not swap)
+        self.compare_btn.setEnabled(swap)   # channel-swap only
+
+    def _compare(self):
+        sel = nuke.selectedNodes()
+        plate = sel[0] if sel else None
+        if plate is None:
+            nuke.message("Select the plate (Read) node first.")
+            return
+        try:
+            build_compare_combos(plate)
+            self.accept()
+            if hasattr(nuke, "zoomToFitSelected"):
+                nuke.zoomToFitSelected()
+        except Exception as exc:  # noqa: BLE001
+            nuke.message("Compare error:\n%s" % exc)
 
     def _apply_preset(self, name):
         damaged, donor, pre = PRESETS[name]
