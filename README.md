@@ -3,7 +3,24 @@
 Nuke gizmos and tools from **Pixel Eye Pictures**. Free to use and modify
 under the GPL-3.0 license (see `LICENSE`).
 
-Tested in **Nuke 14** (Python 3, PySide2). Should work in Nuke 13+.
+**Nuke 14+** — built and tested in Nuke 14 (Python 3; PySide2 with a PySide6
+fallback for Nuke 15+).
+
+---
+
+## Preview
+
+**CornerPin → Matrix** — drive a Roto/paint from a corner pin so it follows the plate:
+
+![CornerPin to Matrix](images/cornerpin_follow.png)
+
+**Fringe Fix** — clamp coloured edge fringing:
+
+![Fringe Fix](images/fringe_before_after.png)
+
+**Marker Cleanup** — remove tracking markers (patch-fill mode shown):
+
+![Marker Cleanup](images/marker_before_after.png)
 
 ---
 
