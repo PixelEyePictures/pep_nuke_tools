@@ -77,6 +77,40 @@ The controller follows the pin. If it ever moves the wrong way, toggle
 > Note: live-link is not available for Roto/RotoPaint (their shape transform
 > is curve-based and cannot be expression-linked) — use **Paste / bake** there.
 
+Every gizmo also has a **Help** tab in its properties panel.
+
+---
+
+## Examples
+
+### Stick a paint/roto to a tracked surface
+1. Track 4 points on the surface → **Tracker → CornerPin** (creates a `CornerPin2D`).
+2. Tab → **`PEP_CornerPinMatrix_v2`**. Link its `from`/`to` to the CornerPin (copy/paste the corner values, or expression-link).
+3. Paint your fix on frame 1 with a **RotoPaint** drawn over the reference frame.
+4. In the gizmo's **Matrix** tab: set **target node** = your RotoPaint (or *Set from selected*), tick **bake**, set **first/last** to the shot range, press **Paste matrix into target**.
+5. Scrub — the paint now rides the corner pin. Wrong direction? toggle **invert**, paste again.
+
+### Live-updating screen replacement
+1. Tab → **`PEP_CornerPinMatrix_v2`**, set/link its corners.
+2. Add a **CornerPin2D** for your insert, set **target node** to it, press **Live link into target**.
+3. Now tweaking the gizmo's corners updates the insert live — no re-baking.
+
+### Kill a blue/purple edge fringe
+1. Tab → **`PEP_FringeFix`** after the offending node.
+2. **method** = *Channel clamp*, **channel** = *blue* (or the fringing channel), **mix** = 1.
+3. Still hot on hard edges? drop **mix**, or mask the node with a garbage matte so it only touches the fringe.
+
+### Realign chromatic aberration
+1. **`PEP_FringeFix`**, **method** = *Chroma shift*, pick the **channel** that's off, nudge **chroma scale** (e.g. `1.001` / `0.999`) until the channels register.
+
+### Remove orange markers on green screen
+1. Select the plate. **PEP Tools → Marker Cleanup** → **Channel swap** → preset *Green screen / warm markers*.
+2. Refine the `MC_MarkerMask` roto around the markers and wipe the `MC_MatchScreen` grade to match the screen.
+
+### Remove black/neutral markers
+1. Select the plate. **Marker Cleanup** → **Patch fill**.
+2. Tune the `MC_DarkKey` range to isolate the dark markers; raise **fill blur size** / **grow** until the holes fill with surrounding screen.
+
 ---
 
 ## License
