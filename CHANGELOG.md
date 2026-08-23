@@ -10,6 +10,9 @@
 - **Marker Cleanup**: tracking-marker removal network builder with two modes -
   **Channel swap** (coloured markers) and **Patch fill** (black / neutral
   markers: luminance-key -> grow -> surrounding-screen fill).
+- **Read Node Manager** (`pep_read_manager`): list/enable/disable all Reads and
+  batch-relink paths (find/replace with scope, or per-node edit).
 - **Fringe Fix** gizmo (`PEP_FringeFix`): channel-clamp de-fringe + chroma-shift
   realign, per selectable channel, with a mix control.
+- **Help** in every tool (Help tab on gizmos; Help button on the panels).
 - v2 gizmo: explicit **target node** field + **Set from selected**.

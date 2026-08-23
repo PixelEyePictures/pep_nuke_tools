@@ -237,6 +237,65 @@ def build_patch_network(plate, fill_size=40, grow=3):
 
 
 # --------------------------------------------------------------------------- #
+# Help
+# --------------------------------------------------------------------------- #
+def _show_help(parent, title, html):
+    dlg = QtWidgets.QDialog(parent)
+    dlg.setWindowTitle(title)
+    dlg.setModal(True)
+    dlg.resize(560, 460)
+    lay = QtWidgets.QVBoxLayout(dlg)
+    view = QtWidgets.QTextBrowser()
+    view.setOpenExternalLinks(True)
+    view.setHtml(html)
+    lay.addWidget(view)
+    btn = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+    btn.rejected.connect(dlg.reject)
+    btn.accepted.connect(dlg.accept)
+    lay.addWidget(btn)
+    dlg.exec_()
+
+
+_HELP_HTML = """
+<h3>PEP Marker Cleanup</h3>
+<p>Removes tracking markers by rebuilding the network for you. Two methods:</p>
+
+<h4>Channel swap (coloured markers)</h4>
+<p>A coloured marker usually blows out <b>one</b> RGB channel. Copy a clean
+donor channel over that damaged channel, then grade it back to the screen
+colour. Pick a <b>preset</b> or set the channels by hand:</p>
+<ul>
+<li><b>Green screen / warm markers</b> (orange, red, yellow) &rarr; damaged
+<b>red</b>, donor <b>blue</b></li>
+<li><b>Green screen / magenta markers</b> &rarr; damaged <b>green</b>, donor
+<b>blue</b></li>
+<li><b>Blue screen / green markers</b> &rarr; damaged <b>green</b>, donor
+<b>blue</b> (+ pre-grade)</li>
+<li><b>Blue screen / warm markers</b> &rarr; damaged <b>red</b>, donor
+<b>green</b> (+ pre-grade)</li>
+</ul>
+<p>After building, wipe the <b>MC_MatchScreen</b> grade in the Viewer to match
+the swapped channel to the backing, and paint the <b>MC_MarkerMask</b> roto
+around the markers.</p>
+
+<h4>Patch fill (black / neutral markers)</h4>
+<p>Black markers have no dominant channel, so channel-swap can't help. This
+mode luminance-keys the dark markers, grows the matte, and fills the holes
+with surrounding screen (blurred plate). Tune <b>Fill blur size</b> and
+<b>Matte grow</b>, and the <b>MC_DarkKey</b> range in the Viewer.</p>
+
+<h4>Honest caveats</h4>
+<ul>
+<li><b>Blue screen + red markers</b> is only partial with channel-swap (red
+markers also darken blue) &mdash; use the pre-grade and grade the blue back,
+or switch to Patch fill.</li>
+<li><b>Black / neutral markers</b>: Patch fill only.</li>
+</ul>
+<p style="color:#888">Pixel Eye Pictures</p>
+"""
+
+
+# --------------------------------------------------------------------------- #
 # GUI
 # --------------------------------------------------------------------------- #
 class MarkerCleanupDialog(QtWidgets.QDialog):
@@ -282,8 +341,10 @@ class MarkerCleanupDialog(QtWidgets.QDialog):
         self._form = form
 
         btns = QtWidgets.QHBoxLayout()
+        self.help_btn = QtWidgets.QPushButton("Help")
         self.build_btn = QtWidgets.QPushButton("Build Network")
         self.cancel_btn = QtWidgets.QPushButton("Cancel")
+        btns.addWidget(self.help_btn)
         btns.addStretch()
         btns.addWidget(self.cancel_btn)
         btns.addWidget(self.build_btn)
@@ -293,6 +354,7 @@ class MarkerCleanupDialog(QtWidgets.QDialog):
         self.preset.currentTextChanged.connect(self._apply_preset)
         self.build_btn.clicked.connect(self._build)
         self.cancel_btn.clicked.connect(self.reject)
+        self.help_btn.clicked.connect(lambda: _show_help(self, "Marker Cleanup - Help", _HELP_HTML))
         self._apply_preset(self.preset.currentText())
         self._sync_method()
 

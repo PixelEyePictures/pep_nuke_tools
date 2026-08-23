@@ -16,3 +16,5 @@ _m.addCommand("CornerPin to Matrix (panel)",
               "import pep_cornerpin_matrix as pm; pm.launch_cornerpin_matrix()")
 _m.addCommand("Marker Cleanup",
               "import pep_marker_cleanup as mc; mc.launch_marker_cleanup()")
+_m.addCommand("Read Node Manager",
+              "import pep_read_manager as rm; rm.launch_read_manager()")

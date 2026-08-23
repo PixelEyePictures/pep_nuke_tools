@@ -22,6 +22,10 @@ fallback for Nuke 15+).
 
 ![Marker Cleanup](images/marker_before_after.png)
 
+**Read Node Manager** — see/enable/disable and relink all Reads at once:
+
+![Read Node Manager](images/read_node_manager.png)
+
 ---
 
 ## Tools
@@ -32,6 +36,7 @@ fallback for Nuke 15+).
 | **CornerPin to Matrix v2** | gizmo `PEP_CornerPinMatrix_v2` | Same, plus a **transpose** toggle and a **live expression-link** (target updates as the corners move) for CornerPin2D targets. |
 | **CornerPin to Matrix (panel)** | Python | Dialog version of the above (no gizmo node). |
 | **Fringe Fix** | gizmo `PEP_FringeFix` | Kill coloured edge fringing (red/blue/magenta) by clamping the channel to the average of the other two, or realign chromatic aberration with a per-channel chroma shift. Mix control; mask externally if needed. |
+| **Read Node Manager** | Python | List every Read / ReadGeo with status + path; batch **enable/disable**; and **relink paths** (find/replace or per-node edit) — e.g. repoint every pass from `sh045` to `sh052` in one go. |
 | **Marker Cleanup** | Python | Tracking-marker removal. **Channel swap** for coloured markers (green/blue screen, orange/red/green/magenta) and **Patch fill** for black/neutral markers (luminance-key → grow → surrounding-screen fill). Builds the network for you. |
 
 ---
@@ -110,6 +115,11 @@ Every gizmo also has a **Help** tab in its properties panel.
 ### Remove black/neutral markers
 1. Select the plate. **Marker Cleanup** → **Patch fill**.
 2. Tune the `MC_DarkKey` range to isolate the dark markers; raise **fill blur size** / **grow** until the holes fill with surrounding screen.
+
+### Move a whole script to a new shot number
+1. **PEP Tools → Read Node Manager** → **Check All**.
+2. **Search/Replace Paths** → Find `sh045` → Replace `sh052` → **Apply** (repeat for the version, e.g. `_v003` → `_v001`).
+3. Every Read (all passes) repoints at once — no re-importing. Match a distinctive token, not a bare number.
 
 ---
 

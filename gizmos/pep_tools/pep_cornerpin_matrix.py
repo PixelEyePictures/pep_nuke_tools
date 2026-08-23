@@ -339,6 +339,47 @@ def gizmo_link(node=None):
 
 
 # --------------------------------------------------------------------------- #
+# Help
+# --------------------------------------------------------------------------- #
+def _show_help(parent, title, html):
+    dlg = QtWidgets.QDialog(parent)
+    dlg.setWindowTitle(title)
+    dlg.setModal(True)
+    dlg.resize(560, 460)
+    lay = QtWidgets.QVBoxLayout(dlg)
+    view = QtWidgets.QTextBrowser()
+    view.setOpenExternalLinks(True)
+    view.setHtml(html)
+    lay.addWidget(view)
+    btn = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+    btn.rejected.connect(dlg.reject)
+    btn.accepted.connect(dlg.accept)
+    lay.addWidget(btn)
+    dlg.exec_()
+
+
+_HELP_HTML = """
+<h3>PEP CornerPin to Matrix</h3>
+<p>Turns a CornerPin's corners into a 4x4 matrix and drives another node with
+it, so a Roto / RotoPaint follows the pin (or a CornerPin reproduces it).</p>
+<ol>
+<li>Get corner-pin data (track it, or animate a CornerPin's <i>to</i> corners).</li>
+<li>Set / link the <b>to</b> and <b>from</b> corners on this panel (or the gizmo).</li>
+<li>Pick the <b>target</b> node (Roto / RotoPaint / CornerPin2D).</li>
+<li>Press <b>Apply</b>. Tick <b>bake</b> + set first/last for tracked (animated)
+pins.</li>
+</ol>
+<p><b>invert</b> &mdash; flip the direction if the target moves the wrong way.<br>
+<b>Copy matrix to clipboard</b> &mdash; grab the 4x4 for use elsewhere.</p>
+<p><b>Targets:</b> CornerPin2D (image warp) and Roto/RotoPaint (shape follow).
+GridWarp/SplineWarp are freeform and can't take a global matrix.</p>
+<p>The <b>v2 gizmo</b> adds a live expression-link, a target-node field, and a
+transpose (swap rows/columns) toggle.</p>
+<p style="color:#888">Pixel Eye Pictures</p>
+"""
+
+
+# --------------------------------------------------------------------------- #
 # GUI
 # --------------------------------------------------------------------------- #
 class CornerPinMatrixDialog(QtWidgets.QDialog):
@@ -381,9 +422,11 @@ class CornerPinMatrixDialog(QtWidgets.QDialog):
         lay.addLayout(form)
 
         btns = QtWidgets.QHBoxLayout()
+        self.help_btn = QtWidgets.QPushButton("Help")
         self.copy_btn = QtWidgets.QPushButton("Copy matrix to clipboard")
         self.apply_btn = QtWidgets.QPushButton("Apply")
         self.cancel_btn = QtWidgets.QPushButton("Cancel")
+        btns.addWidget(self.help_btn)
         btns.addWidget(self.copy_btn)
         btns.addStretch()
         btns.addWidget(self.cancel_btn)
@@ -391,6 +434,8 @@ class CornerPinMatrixDialog(QtWidgets.QDialog):
         lay.addLayout(btns)
 
         self.bake_cb.toggled.connect(self._sync_range)
+        self.help_btn.clicked.connect(
+            lambda: _show_help(self, "CornerPin to Matrix - Help", _HELP_HTML))
         self.copy_btn.clicked.connect(self._copy)
         self.apply_btn.clicked.connect(self._apply)
         self.cancel_btn.clicked.connect(self.reject)
