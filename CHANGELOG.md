@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+- **Rename & Relink** (was TagRename): name template, Find/Replace, per‑node
+  editing, **frame scope** (all / range / current) and **renumber** (start/step);
+  works on Read & Write; partial renames stay safe.
+- **Read Node Manager**: **Media** column — OK / MISSING x/n / OFFLINE detection.
+- Every panel tool now shows a **Pixel Eye Pictures | GitHub** footer.
+
 ## v1.0
 - **CornerPin to Matrix** gizmo (`PEP_CornerPinMatrix`): convert a CornerPin's
   corners to a 4x4 matrix and paste into Roto / RotoPaint / CornerPin2D;

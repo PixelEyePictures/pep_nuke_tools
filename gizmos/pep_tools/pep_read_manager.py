@@ -7,12 +7,60 @@ each path) -- without opening every node.
 Pixel Eye Pictures.
 """
 
+import os
+import re
+import glob as _glob
+
 import nuke
 
 try:
     from PySide2 import QtWidgets, QtCore, QtGui
 except ImportError:  # Nuke 15+/PySide6 fallback
     from PySide6 import QtWidgets, QtCore, QtGui
+
+
+_TOKEN_RE = re.compile(r"#+|%0?\d*d|\$\{?F\d*\}?")
+
+
+def media_status(node):
+    """(label, colour) describing whether the node's media is on disk.
+    Detects OFFLINE and MISSING frames for sequences."""
+    if "file" not in node.knobs():
+        return ("-", "gray")
+    p = node["file"].value().replace("\\", "/")
+    if not p:
+        return ("no path", "red")
+    d, b = os.path.split(p)
+    if _TOKEN_RE.search(b):
+        files = _glob.glob(os.path.join(d, _TOKEN_RE.sub("*", b))) if d else []
+        have = len(files)
+        if have == 0:
+            return ("OFFLINE", "red")
+        expected = None
+        try:
+            first = int(node["first"].value())
+            last = int(node["last"].value())
+            if last >= first:
+                expected = last - first + 1
+        except Exception:  # noqa: BLE001
+            expected = None
+        if expected and have < expected:
+            return ("MISSING %d/%d" % (expected - have, expected), "orange")
+        return ("OK (%d)" % have, "green")
+    return ("OK", "green") if (d and os.path.exists(p)) else ("OFFLINE", "red")
+
+
+_FOOTER_HTML = ('<span style="color:#8a8a8a">Pixel Eye Pictures</span>'
+                '&nbsp;&nbsp;|&nbsp;&nbsp;'
+                '<a href="https://github.com/PixelEyePictures/pep_nuke_tools" '
+                'style="color:#7aa2f7;text-decoration:none">GitHub</a>')
+
+
+def _pep_footer():
+    lbl = QtWidgets.QLabel(_FOOTER_HTML)
+    lbl.setOpenExternalLinks(True)
+    lbl.setAlignment(QtCore.Qt.AlignRight)
+    return lbl
 
 
 def _show_help(parent, title, html):
@@ -38,6 +86,9 @@ _HELP_HTML = """
 open each node.</p>
 <ul>
 <li><b>Scan for</b> Read (Images) / ReadGeo (3D); <b>Refresh List</b> to rescan.</li>
+<li><b>Media</b> column flags each node's files on disk: <b>OK (n)</b>,
+<b>MISSING x/n</b> frames (orange), or <b>OFFLINE</b> (red) &mdash; instantly
+see what's broken in an inherited script.</li>
 <li><b>Tick</b> rows (or <b>Check All</b> / <b>Uncheck All</b>) to batch-select.</li>
 <li><b>Disable / Enable Selected</b> &mdash; mute or wake the ticked nodes
 (e.g. kill heavy reference clips before a render).</li>
@@ -120,11 +171,12 @@ class ReadNodeManager(QtWidgets.QWidget):
 
         # --- The Table List ---
         self.table = QtWidgets.QTableWidget()
-        self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["Node Name", "Status", "File Path"])
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(["Node Name", "Status", "Media", "File Path"])
         self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
         # --- Action Buttons ---
@@ -155,6 +207,7 @@ class ReadNodeManager(QtWidgets.QWidget):
         self.main_layout.addLayout(self.filter_layout)
         self.main_layout.addWidget(self.table)
         self.main_layout.addLayout(self.button_layout)
+        self.main_layout.addWidget(_pep_footer())
 
         # --- Initial Population ---
         self.populate_list()
@@ -198,12 +251,17 @@ class ReadNodeManager(QtWidgets.QWidget):
             item_status = QtWidgets.QTableWidgetItem(status_text)
             item_status.setForeground(QtGui.QColor("red") if is_disabled else QtGui.QColor("green"))
 
+            media_text, media_col = media_status(node)
+            item_media = QtWidgets.QTableWidgetItem(media_text)
+            item_media.setForeground(QtGui.QColor(media_col))
+
             file_path = node['file'].value() if 'file' in node.knobs() else "N/A"
             item_path = QtWidgets.QTableWidgetItem(file_path)
 
             self.table.setItem(row, 0, item_name)
             self.table.setItem(row, 1, item_status)
-            self.table.setItem(row, 2, item_path)
+            self.table.setItem(row, 2, item_media)
+            self.table.setItem(row, 3, item_path)
 
     def get_checked_nodes(self):
         """Returns the Nuke node objects for rows that are checked."""

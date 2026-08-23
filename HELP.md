@@ -88,6 +88,9 @@ the blue back, or Patch fill); black / neutral markers → Patch fill only.
 Manage every Read / ReadGeo from one window.
 
 - **Scan for** Read (Images) / ReadGeo (3D); **Refresh List** to rescan.
+- **Media** column flags each node's files on disk: **OK (n)**, **MISSING x/n**
+  frames (orange), or **OFFLINE** (red) — instantly see what's broken in an
+  inherited script.
 - **Tick** rows (or **Check All / Uncheck All**) to batch‑select.
 - **Disable / Enable Selected** — mute or wake the ticked nodes.
 - **Search/Replace Paths** — relink the ticked nodes:
@@ -103,20 +106,25 @@ not a bare number.
 
 ---
 
-## TagRename  (PEP Tools → TagRename)
+## Rename & Relink  (PEP Tools → Rename & Relink)
 
 Rename the actual **rendered files on disk** and relink the node — fix a typo,
-missing dot, or wrong version without leaving Nuke or re‑rendering.
+wrong version, or name a shot without leaving Nuke or re‑rendering. Single file,
+whole sequence, and multiple nodes (batch) are handled automatically.
 
-1. Select the Read/Write node(s). Single file, whole sequence, and multiple
-   nodes (batch) are handled automatically.
-2. Type **Find / Replace** (applied to the file name; folders untouched).
-   Toggle **Case sensitive**.
-3. Check the **Old → New** preview and file counts.
-4. **Apply** renames every matching file on disk and updates the node path.
+1. Select the Read/Write node(s) → **Refresh from selection**.
+2. Set the new name in any of these ways:
+   - **New name** column — double‑click a row and type it (keep `####`).
+   - **Name template** — one mask for all rows, e.g. `shot010_comp_v02.####.exr`.
+   - **Find / Replace** (+ **Case sensitive**) — batch edit names.
+3. **Frames:** All / Range (first–last) / Current — rename a subset.
+4. **Renumber** (Start / Step) — recount frames into the new name, or leave off
+   to keep the original frame numbers.
+5. Check the **Old → New** preview and **#files**, then **Apply**.
 
-Safe: rename‑only (never deletes), never overwrites an existing file, and
-reports missing / locked frames.
+Safe: rename‑only (never deletes), never overwrites, reports missing / locked
+frames. A **partial** frame rename leaves the node on the old name (a sequence
+can't have two names).
 
 ---
 

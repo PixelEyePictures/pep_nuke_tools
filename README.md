@@ -30,9 +30,9 @@ fallback for Nuke 15+).
 
 ![Read Node Manager](images/read_node_manager.png)
 
-**TagRename** — rename rendered files on disk (single / sequence / batch) and relink:
+**Rename & Relink** — rename rendered files on disk (single / sequence / batch) and relink:
 
-![TagRename](images/tagrename.png)
+![Rename & Relink](images/tagrename.png)
 
 ---
 
@@ -44,8 +44,8 @@ fallback for Nuke 15+).
 | **CornerPin to Matrix v2** | gizmo `PEP_CornerPinMatrix_v2` | Same, plus a **transpose** toggle and a **live expression-link** (target updates as the corners move) for CornerPin2D targets. |
 | **CornerPin to Matrix (panel)** | Python | Dialog version of the above (no gizmo node). |
 | **Fringe Fix** | gizmo `PEP_FringeFix` | Kill coloured edge fringing (red/blue/magenta) by clamping the channel to the average of the other two, or realign chromatic aberration with a per-channel chroma shift. Mix control; mask externally if needed. |
-| **Read Node Manager** | Python | List every Read / ReadGeo with status + path; batch **enable/disable**; and **relink paths** (find/replace or per-node edit) — e.g. repoint every pass from `sh045` to `sh052` in one go. |
-| **TagRename** | Python | Rename the actual **rendered files on disk** (single / sequence / batch) and relink the node — fix a typo, missing dot, or wrong version without leaving Nuke or re-rendering. Rename-only, previews, never overwrites. |
+| **Read Node Manager** | Python | List every Read / ReadGeo with status + path and a **Media** flag (OK / MISSING x/n frames / OFFLINE); batch **enable/disable**; and **relink paths** (find/replace or per-node edit) — e.g. repoint every pass from `sh045` to `sh052` in one go. |
+| **Rename & Relink** | Python | Rename the actual **rendered files on disk** (single / sequence / batch) and relink the node — fix a typo, wrong version, or rename a shot without leaving Nuke or re-rendering. Type a **name template** (keep `####`), **Find/Replace**, choose **frames** (all / range / current), and optionally **renumber** (start/step). Rename-only, previews, never overwrites. |
 | **Marker Cleanup** | Python | Tracking-marker removal. **Channel swap** for coloured markers (green/blue screen, orange/red/green/magenta) and **Patch fill** for black/neutral markers (luminance-key → grow → surrounding-screen fill). Builds the network for you. |
 
 ---
@@ -131,9 +131,10 @@ Every gizmo also has a **Help** tab in its properties panel.
 3. Every Read (all passes) repoints at once — no re-importing. Match a distinctive token, not a bare number.
 
 ### Fix a typo in a rendered file (rename on disk)
-1. Select the Read/Write node(s). **PEP Tools → TagRename**.
-2. **Find** the wrong text → **Replace** with the fix (e.g. `plaet` → `plate`, or a version bump).
-3. Check the **Old → New** preview and file counts → **Apply**. It renames every frame on disk and relinks the node — no re-render.
+1. Select the Read/Write node(s). **PEP Tools → Rename & Relink**.
+2. Type the new name in the **New name** column (keep `####` for sequences), or use **Find/Replace** / a **Name template** for batches.
+3. Optional: set **Frames** (all / range / current), or tick **Renumber** (start/step) to recount frames.
+4. Check the **Old → New** preview and file counts → **Apply**. It renames on disk and relinks — no re-render.
 
 ---
 

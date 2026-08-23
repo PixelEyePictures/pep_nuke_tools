@@ -290,6 +290,19 @@ def build_compare_combos(plate):
 # --------------------------------------------------------------------------- #
 # Help
 # --------------------------------------------------------------------------- #
+_FOOTER_HTML = ('<span style="color:#8a8a8a">Pixel Eye Pictures</span>'
+                '&nbsp;&nbsp;|&nbsp;&nbsp;'
+                '<a href="https://github.com/PixelEyePictures/pep_nuke_tools" '
+                'style="color:#7aa2f7;text-decoration:none">GitHub</a>')
+
+
+def _pep_footer():
+    lbl = QtWidgets.QLabel(_FOOTER_HTML)
+    lbl.setOpenExternalLinks(True)
+    lbl.setAlignment(QtCore.Qt.AlignRight)
+    return lbl
+
+
 def _show_help(parent, title, html):
     dlg = QtWidgets.QDialog(parent)
     dlg.setWindowTitle(title)
@@ -402,6 +415,7 @@ class MarkerCleanupDialog(QtWidgets.QDialog):
         btns.addWidget(self.cancel_btn)
         btns.addWidget(self.build_btn)
         lay.addLayout(btns)
+        lay.addWidget(_pep_footer())
 
         self.method.currentIndexChanged.connect(self._sync_method)
         self.preset.currentTextChanged.connect(self._apply_preset)
