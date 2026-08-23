@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Nuke
+*.autosave
+*.nk~
+*.nk.autosave
+.nuke/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.swp

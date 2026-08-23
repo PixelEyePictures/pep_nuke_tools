@@ -1,0 +1,50 @@
+Gizmo {
+ addUserKnob {20 cpm_tab l "CornerPin Matrix"}
+ addUserKnob {26 cpm_head l "" +STARTLINE T "Corner-pin that also outputs its 3x3 as a Nuke 4x4 matrix."}
+ addUserKnob {41 to1 T CP.to1}
+ addUserKnob {41 to2 T CP.to2}
+ addUserKnob {41 to3 T CP.to3}
+ addUserKnob {41 to4 T CP.to4}
+ addUserKnob {26 sp_to l "" +STARTLINE}
+ addUserKnob {41 from1 T CP.from1}
+ addUserKnob {41 from2 T CP.from2}
+ addUserKnob {41 from3 T CP.from3}
+ addUserKnob {41 from4 T CP.from4}
+ addUserKnob {26 sp_from l "" +STARTLINE}
+ addUserKnob {41 invert l "invert (to->from)" T CP.invert}
+ addUserKnob {26 pep_div l "" +STARTLINE}
+ addUserKnob {26 pep_credit l "" +STARTLINE T "Pixel Eye Pictures  |  <a href=\"https://github.com/PixelEyePictures/pep_nuke_tools\"><font color=\"#7aa2f7\">GitHub</font></a>"}
+ addUserKnob {20 cpm_mtx l Matrix}
+ addUserKnob {43 matrix_str l matrix}
+ addUserKnob {22 solve l "Solve (current frame)" -STARTLINE T "import sys\nsys.path.insert(0, r'C:\\Users\\Anuj\\.nuke\\PEP_CornerPinMatrix')\nimport pep_cornerpin_matrix as pm\npm.gizmo_solve(nuke.thisNode())"}
+ addUserKnob {22 copymtx l "Copy to clipboard" -STARTLINE T "import sys\nsys.path.insert(0, r'C:\\Users\\Anuj\\.nuke\\PEP_CornerPinMatrix')\nimport pep_cornerpin_matrix as pm\npm.gizmo_copy(nuke.thisNode())"}
+ addUserKnob {26 sp_b l "" +STARTLINE}
+ addUserKnob {6 bake l "bake animation over range when pasting" +STARTLINE}
+ addUserKnob {3 first}
+ first 1
+ addUserKnob {3 last -STARTLINE}
+ last 100
+ addUserKnob {22 paste l "Paste matrix into selected node" -STARTLINE T "import sys\nsys.path.insert(0, r'C:\\Users\\Anuj\\.nuke\\PEP_CornerPinMatrix')\nimport pep_cornerpin_matrix as pm\npm.gizmo_paste(nuke.thisNode())"}
+ addUserKnob {20 help_tab l Help}
+ addUserKnob {26 help_txt l "" +STARTLINE T "<b>PEP CornerPin to Matrix</b><br><br>Turns a corner-pin into a 4x4 matrix and pastes it into another node, so a Roto / RotoPaint follows the pin.<br><br><b>1.</b> Set the <i>to/from</i> corners (or link them to your tracked CornerPin).<br><b>2.</b> Select this gizmo <b>and</b> the node to drive.<br><b>3.</b> On the Matrix tab press <i>Paste matrix into selected node</i>. Tick <i>bake</i> + set first/last for tracked pins.<br><br><b>invert</b> - flip the direction if it moves the wrong way.<br><br>Targets: CornerPin2D and Roto/RotoPaint.<br><br>Need a live, self-updating link? Use the <b>v2</b> gizmo."}
+}
+ Input {
+  inputs 0
+  name Input1
+ }
+ CornerPin2D {
+  to1 {0 0}
+  to2 {2048 0}
+  to3 {2048 1556}
+  to4 {0 1556}
+  invert false
+  from1 {0 0}
+  from2 {2048 0}
+  from3 {2048 1556}
+  from4 {0 1556}
+  name CP
+ }
+ Output {
+  name Output1
+ }
+end_group

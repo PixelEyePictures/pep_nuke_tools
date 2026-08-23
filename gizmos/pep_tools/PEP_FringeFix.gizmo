@@ -1,0 +1,76 @@
+Gizmo {
+ addUserKnob {20 ff_tab l "Fringe Fix"}
+ addUserKnob {26 ff_head l "" +STARTLINE T "Kill coloured edge fringing (red/blue/magenta) or realign chroma."}
+ addUserKnob {4 method M {"Channel clamp (fringe)" "Chroma shift (realign)"}}
+ addUserKnob {4 channel M {red green blue}}
+ channel blue
+ addUserKnob {7 mix}
+ mix 1
+ addUserKnob {7 chroma_scale l "chroma scale" t "Chroma-shift only: per-channel scale about centre (e.g. 1.001 / 0.999)." R 0.99 1.01}
+ chroma_scale 1.001
+ addUserKnob {26 pep_div l "" +STARTLINE}
+ addUserKnob {26 pep_credit l "" +STARTLINE T "Pixel Eye Pictures  |  <a href=\"https://github.com/PixelEyePictures/pep_nuke_tools\"><font color=\"#7aa2f7\">GitHub</font></a>"}
+ addUserKnob {20 help_tab l Help}
+ addUserKnob {26 help_txt l "" +STARTLINE T "<b>PEP Fringe Fix</b><br><br>Cleans coloured edge fringing or realigns chromatic aberration.<br><br><b>Channel clamp (fringe)</b> - clamps the chosen channel to the average of the other two wherever it over-shoots. Kills red / blue / magenta edge fringing. Pick the fringe <i>channel</i> (blue is most common) and dial <i>mix</i>.<br><br><b>Chroma shift (realign)</b> - scales one channel by a fraction of a pixel about centre to re-register the channels (lens chromatic aberration). Set <i>channel</i> and <i>chroma scale</i> (e.g. 1.001 / 0.999).<br><br>Apply only where needed: connect a garbage matte upstream or mask this node externally."}
+}
+ Input {
+  inputs 0
+  name Input1
+ }
+set Nf8f1a000 [stack 0]
+ Transform {
+  scale {{parent.chroma_scale}}
+  center {{width/2} {height/2}}
+  name ChromaScale
+ }
+set Nf8f1a800 [stack 0]
+push $Nf8f1a000
+ Copy {
+  inputs 2
+  from0 rgba.blue
+  to0 rgba.blue
+  name ChromaCopyB
+ }
+push $Nf8f1a800
+push $Nf8f1a000
+ Copy {
+  inputs 2
+  from0 rgba.green
+  to0 rgba.green
+  name ChromaCopyG
+ }
+push $Nf8f1a800
+push $Nf8f1a000
+ Copy {
+  inputs 2
+  from0 rgba.red
+  to0 rgba.red
+  name ChromaCopyR
+ }
+ Switch {
+  inputs 3
+  which {{parent.channel}}
+  name ChromaSwitch
+ }
+push $Nf8f1a000
+ Expression {
+  expr0 "parent.channel==0 ? (r>(g+b)/2?(g+b)/2:r) : r"
+  expr1 "parent.channel==1 ? (g>(r+b)/2?(r+b)/2:g) : g"
+  expr2 "parent.channel==2 ? (b>(r+g)/2?(r+g)/2:b) : b"
+  name Clamp
+ }
+ Switch {
+  inputs 2
+  which {{parent.method}}
+  name Method
+ }
+push $Nf8f1a000
+ Dissolve {
+  inputs 2
+  which {{parent.mix}}
+  name MixBack
+ }
+ Output {
+  name Output1
+ }
+end_group
