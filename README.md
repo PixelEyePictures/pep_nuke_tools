@@ -47,6 +47,10 @@ fallback for Nuke 15+).
 | **Read Node Manager** | Python | List every Read / ReadGeo with status + path and a **Media** flag (OK / MISSING x/n frames / OFFLINE); batch **enable/disable**; and **relink paths** (find/replace or per-node edit) — e.g. repoint every pass from `sh045` to `sh052` in one go. |
 | **Rename & Relink** | Python | Rename the actual **rendered files on disk** (single / sequence / batch) and relink the node — fix a typo, wrong version, or rename a shot without leaving Nuke or re-rendering. Type a **name template** (keep `####`), **Find/Replace**, choose **frames** (all / range / current), and optionally **renumber** (start/step). Rename-only, previews, never overwrites. |
 | **Marker Cleanup** | Python | Tracking-marker removal. **Channel swap** for coloured markers (green/blue screen, orange/red/green/magenta) and **Patch fill** for black/neutral markers (luminance-key → grow → surrounding-screen fill). Builds the network for you. |
+| **TrackPin** | Python (builds a group) | A tidy **stabilize / match-move** CornerPin rig. Fill the `to` corners with a 4-point track, pick a **reference frame**, choose **Match Move** (a held still rides the track) or **Stabilize** (lock the plate). Fill from a Tracker's exported CornerPin, keep edges, bake to keyframes, or **Send to Matrix** to bake onto a Roto/RotoPaint. |
+| **Clipping Degrain** | Python (builds a group) | Denoise cleanly against crushed blacks / blown whites: lifts the signal off the clip point, denoises in the headroom, then reverses exactly. **No plugin lock-in** — swappable inner denoiser (Median / Nuke Denoise / **Neat Video** auto-detected) with an *Open denoiser controls* button. **Blacks / Whites / Both** mode; lossless when idle. |
+| **Gradient** | Python (builds a group) | Multi-stop background / gradient generator. **Up to 4 colour stops**, shapes **Linear / Radial / Box / Diamond / Depth**, and **noise break-up** to kill banding. **Depth mode** remaps a depth pass through the stops for an instant depth fog. Smooth (blur) controls, lockable centre handle. |
+| **Match Blacks** | Python (builds a group) | Match / neutralise / crush the **low range only** without touching mids or highlights. Remap a **Source** colour in the shadows to a **Target**. One-click **Neutralise** (kill a cast), **Zero blacks**, or **Match to reference** (sample a reference plate's blacks). **Softness** feathers into the mids. |
 
 ---
 
@@ -135,6 +139,27 @@ Every gizmo also has a **Help** tab in its properties panel.
 2. Type the new name in the **New name** column (keep `####` for sequences), or use **Find/Replace** / a **Name template** for batches.
 3. Optional: set **Frames** (all / range / current), or tick **Renumber** (start/step) to recount frames.
 4. Check the **Old → New** preview and file counts → **Apply**. It renames on disk and relinks — no re-render.
+
+### Stabilize a shot, paint, then re-apply the move (TrackPin)
+1. Track 4 points → **Tracker → export → CornerPin2D**.
+2. **PEP Tools → TrackPin**. Set **source node** to that CornerPin and press **Fill corners from node**.
+3. Set the **reference frame**, choose **mode = Stabilize**, press **Apply** — the plate locks.
+4. Paint your fix on the locked frame, then switch **mode = Match Move** and **Apply** to ride the motion back on.
+
+### Denoise crushed blacks without banding (Clipping Degrain)
+1. **PEP Tools → Clipping Degrain** after the plate. Turn on **Show clip**.
+2. Raise **Remove clip (blacks)** until the white flags clear (you're lifting off the clip point).
+3. Turn off **Show clip**, press **Open denoiser controls**, and set up your denoiser (or tick **Use Neat Video** if installed).
+
+### Build a depth fog (Gradient)
+1. **PEP Tools → Gradient**. Plug a **depth pass** into the input, set **shape = Depth**.
+2. Set **depth near / far** to frame the range, and set **colour stops** (e.g. clear → haze colour).
+3. Raise **noise amount** (and **noise blur / smooth**) for patchy, organic fog. Tick **lock centre** so you don't nudge the handle.
+
+### Neutralise a colour cast in the blacks (Match Blacks)
+1. **PEP Tools → Match Blacks**. Set **Pin Blacks** to the top of the range to affect.
+2. Eyedrop the cast into **Source Color**, then press **Neutralise** (or **Match to reference** with a reference plate on input 2).
+3. Add **Softness** so the correction feathers into the mids.
 
 ---
 

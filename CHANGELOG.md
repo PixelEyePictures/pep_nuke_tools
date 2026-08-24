@@ -1,6 +1,20 @@
 # Changelog
 
 ## Unreleased
+- **TrackPin**: stabilize / match‑move CornerPin rig — fill corners from a
+  Tracker's CornerPin, reference frame, Match Move / Stabilize, keep edges,
+  bake to keyframes, and Send to Matrix.
+- **Clipping Degrain**: denoise against crushed blacks / blown whites with a
+  swappable, no‑lock‑in denoiser (Median / Nuke Denoise / Neat Video
+  auto‑detected); Blacks / Whites / Both mode; lossless when idle.
+- **Gradient**: multi‑stop background generator — up to 4 colour stops; Linear /
+  Radial / Box / Diamond / Depth shapes; depth‑fog mode; noise break‑up with
+  blur/smooth controls and a lockable centre handle.
+- **Match Blacks**: match / neutralise / crush the low range only — Source→Target
+  remap with Neutralise, Zero blacks, Match to reference, and Softness.
+- Footer: only **GitHub** is a link now; "Pixel Eye Pictures" is plain text.
+- Fix: CornerPin and Marker Cleanup panels import `QtCore` (footer alignment).
+
 - **Rename & Relink** (was TagRename): name template, Find/Replace, per‑node
   editing, **frame scope** (all / range / current) and **renumber** (start/step);
   works on Read & Write; partial renames stay safe.

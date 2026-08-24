@@ -126,6 +126,72 @@ Safe: rename‑only (never deletes), never overwrites, reports missing / locked
 frames. A **partial** frame rename leaves the node on the old name (a sequence
 can't have two names).
 
+## TrackPin  (PEP Tools → TrackPin)
+
+A tidy stabilize / match‑move CornerPin rig (builds a group).
+
+1. Put a 4‑point track into the **to** corners — paste it, or set **source
+   node** to a CornerPin exported from your Tracker and press **Fill corners
+   from node**.
+2. Set the **reference frame** (or **Set to current**).
+3. **mode = Match Move** (a held still rides the track) or **Stabilize** (lock
+   the plate to the reference frame). Press **Apply**.
+4. **Reset** returns the corners to the raw track.
+
+Extras: **keep edges** (don't crop the stabilized plate), **Bake to keyframes**
+(freeze the corners so it renders without the live expressions), and **Send to
+Matrix** (bake the pin's 4×4 onto a selected Roto / RotoPaint / CornerPin2D).
+Round trip: Stabilize → paint on the locked frame → switch to Match Move → Apply.
+
+---
+
+## Clipping Degrain  (PEP Tools → Clipping Degrain)
+
+Denoise cleanly against crushed blacks / blown whites (builds a group).
+
+1. Turn on **Show clip** — pixels still clipped after the lift flag white.
+2. Raise **Remove clip (blacks / whites)** until the white clears (you're
+   lifting the signal off the clip point).
+3. Turn off **Show clip**, press **Open denoiser controls**, set up your
+   denoiser. Pick the base denoiser (Median / Nuke Denoise), or tick **Use Neat
+   Video** if it's installed (auto‑detected, any version).
+
+**Mode** protects Blacks, Whites, or Both. The pre‑ and post‑grade are exact
+inverses, so with the denoiser idle the image is unchanged — the tool only ever
+adds the denoise itself.
+
+---
+
+## Gradient  (PEP Tools → Gradient)
+
+Multi‑stop background / gradient generator with shapes, depth fog and noise
+break‑up (builds a group, input‑less unless you use Depth).
+
+1. Set **number of stops** (1–4) and each stop's **colour** + **position**.
+2. Pick a **shape**: Linear (drag **RampFrom0 / Rampto1**), Radial / Box /
+   Diamond (set **centre** + **radius**; tick **lock centre** so you don't nudge
+   it), or **Depth**.
+3. **Depth** mode: plug a depth pass into the input and set **depth near / far**
+   — the stops become a depth fog.
+4. **Break‑up**: raise **noise amount** to disturb the gradient (kills banding,
+   makes fog patchy); **noise blur** softens the noise, **smooth** blurs the
+   final result.
+
+---
+
+## Match Blacks  (PEP Tools → Match Blacks)
+
+Match / neutralise / crush the low range only (builds a group).
+
+1. Set **Pin Blacks** to the top of the range you want to affect.
+2. Set **Source Color** (the cast you have) and **Target Color** (what you
+   want) — use the colour knob's eyedropper on the viewer.
+3. Or press **Neutralise** (kill the cast), **Zero blacks** (crush to black), or
+   **Match to reference** (connect a reference plate to the **Reference** input;
+   it samples both black levels and fills Source / Target).
+4. **Softness** feathers the correction into the mids. **Clamp** holds the low
+   end to the Target. Mask input + **mix** as usual.
+
 ---
 
 _Pixel Eye Pictures — GPL‑3.0._
