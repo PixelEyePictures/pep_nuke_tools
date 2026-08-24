@@ -34,6 +34,18 @@ fallback for Nuke 15+).
 
 ![Rename & Relink](images/tagrename.png)
 
+**Gradient** — multi-stop background with shapes, depth fog and noise break-up:
+
+![Gradient](images/gradient_preview.png)
+
+**Match Blacks** — clean a colour cast out of the shadows (before / after):
+
+![Match Blacks](images/matchblacks_before_after.png)
+
+**Clipping Degrain** — denoise the lifted blacks without banding (before / after):
+
+![Clipping Degrain](images/clipping_degrain_before_after.png)
+
 ---
 
 ## Tools
