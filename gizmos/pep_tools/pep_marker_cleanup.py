@@ -17,9 +17,9 @@ Pixel Eye Pictures.
 import nuke
 
 try:
-    from PySide2 import QtWidgets
+    from PySide2 import QtWidgets, QtCore
 except ImportError:  # Nuke 15+/PySide6 fallback
-    from PySide6 import QtWidgets
+    from PySide6 import QtWidgets, QtCore
 
 
 # --------------------------------------------------------------------------- #
