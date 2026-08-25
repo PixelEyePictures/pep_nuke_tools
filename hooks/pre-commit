@@ -1,0 +1,30 @@
+#!/bin/sh
+# PEP Nuke Tools pre-commit eval gate.
+# Blocks a commit if the repo evals fail (QtCore imports, old-author names,
+# footer format, menu integrity, docs coverage).
+#
+# Finds a WORKING python by probing candidates (the Windows Store stub is
+# rejected). To point at a specific interpreter, either export PEP_PYTHON, or
+# put its path in hooks/.pep_python (git-ignored, machine-local).
+DIR="$(git rev-parse --show-toplevel)"
+
+PY=""
+works() { [ -n "$1" ] && "$1" -c "import sys" >/dev/null 2>&1; }
+LOCAL=""
+[ -f "$DIR/hooks/.pep_python" ] && LOCAL="$(head -n1 "$DIR/hooks/.pep_python")"
+for c in "$LOCAL" "$PEP_PYTHON" python3 python py; do
+  if works "$c"; then PY="$c"; break; fi
+done
+
+if [ -z "$PY" ]; then
+  echo "pre-commit: no working python found (set PEP_PYTHON or hooks/.pep_python), skipping PEP evals"
+  exit 0
+fi
+
+"$PY" "$DIR/pep_repo_evals.py" "$DIR"
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "PEP evals failed - commit blocked. Fix the items above (or 'git commit --no-verify' to override)."
+  exit 1
+fi
+exit 0

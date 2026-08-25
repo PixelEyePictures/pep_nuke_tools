@@ -13,3 +13,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 *.swp
+
+# machine-local python pointer for the pre-commit eval hook
+hooks/.pep_python
