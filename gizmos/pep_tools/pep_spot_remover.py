@@ -1,8 +1,10 @@
 """PEP Spot Remover.
 
-Fast, smooth spot / marker fill. Given a plate (input 0) and a control matte
-(input 1) over the spot, it pulls the surrounding pixels in and fills the hole
-with an exponential blur - smoother and faster than an iterative patch.
+Fast, smooth spot / marker fill. Given a plate (input 1) and a control matte
+(input 2) over the spot, it pulls the surrounding pixels in and fills the hole
+with an exponential blur - smoother and faster than an iterative patch. An
+optional hold-out mask (input 3) can limit or protect where the fill lands, and
+the matte can follow a linked track.
 
 The fill engine (premult surrounding -> exponential blur -> unpremult -> keymix)
 is exposed as a reusable builder so Marker Cleanup can drive it too.
@@ -107,6 +109,10 @@ matte over the spot into input 2 (painted alpha or a white blob both work).</p>
 <li><b>Blur Angle</b> - directional bias (like a directional blur).</li>
 <li><b>mix</b> - blend against the original.</li>
 </ol>
+<p><b>Hold-out mask (input 3):</b> connect a mask and pick <b>mask mode</b> -
+<i>Limit fill to mask</i> (the fill only lands inside it) or <i>Protect</i>
+(keep the fill out of it, e.g. an actor's edge). No mask connected = applies
+everywhere.</p>
 <p><b>Follow a track:</b> put a Tracker (match-move) or a Transform exported from
 it in the <b>tracker</b> field (or <i>Set from selected</i>) and press
 <b>Link tracker</b> - the matte and the fill ride the track over the shot.
@@ -201,7 +207,8 @@ _VERSION = "1.1"
 _RELEASED = "2026-08-23"
 _NOTES = ("Exponential-blur spot fill with Fill Blur, Edge Blur, Sample Size "
           "and Blur Angle; reusable engine shared with Marker Cleanup. v1.1 "
-          "adds a tracker link so the matte and fill follow a track.")
+          "adds a tracker link (matte + fill follow a track) and a hold-out "
+          "mask input with Limit / Protect modes.")
 
 
 def _btn(name, label, fn):
@@ -229,6 +236,7 @@ def build_spot_remover():
     with group:
         rgba = nuke.nodes.Input(name="rgba")
         matte = nuke.nodes.Input(name="matte"); matte["number"].setValue(1)
+        mask = nuke.nodes.Input(name="mask"); mask["number"].setValue(2)
         # optional tracking: the matte (and so the fill) rides a linked track
         mtrack = nuke.nodes.Transform(name="MatteTrack"); mtrack.setInput(0, matte)
         mtrack["black_outside"].setValue(False)
@@ -236,7 +244,20 @@ def build_spot_remover():
         mix = nuke.nodes.Dissolve(name="Mix")
         mix.setInput(0, filled); mix.setInput(1, rgba)   # which=0 -> filled (mix=1)
         mix["which"].setExpression("1-parent.mix")
-        nuke.nodes.Output(name="Output1").setInput(0, mix)
+
+        # optional hold-out mask: Limit the fill to the mask, or Protect it.
+        # No mask connected -> gate = 1 (applies everywhere, unchanged).
+        gate = nuke.nodes.Expression(name="MaskGate"); gate.setInput(0, mask)
+        gate["expr0"].setValue("r"); gate["expr1"].setValue("g"); gate["expr2"].setValue("b")
+        gate["expr3"].setValue(
+            "[exists parent.input2]?"
+            "(parent.mask_mode==1?1-max(a,max(r,max(g,b))):max(a,max(r,max(g,b))))"
+            ":1")
+        final = nuke.nodes.Keymix(name="MaskKeymix", channels="rgb")
+        final.setInput(0, rgba)    # A (gate=0) = original
+        final.setInput(1, mix)     # B (gate=1) = fill result
+        final.setInput(2, gate)    # gate alpha
+        nuke.nodes.Output(name="Output1").setInput(0, final)
 
     k = group.addKnob
     k(nuke.Tab_Knob("spot", "Spot Remover"))
@@ -249,6 +270,14 @@ def build_spot_remover():
     ba = nuke.Double_Knob("BlurAngle", "Blur Angle"); ba.setRange(-180, 180)
     ba.setValue(0); k(ba)
     mx = nuke.Double_Knob("mix", "mix"); mx.setRange(0, 1); mx.setValue(1); k(mx)
+
+    k(nuke.Text_Knob("div_mask", "Hold-out mask (input 3, optional)"))
+    mm = nuke.Enumeration_Knob("mask_mode", "mask mode",
+                               ["Limit fill to mask", "Protect (mask out) area"])
+    mm.setTooltip("Limit: the fill only lands inside the mask. Protect: the "
+                  "fill is kept OUT of the mask (e.g. an actor). No mask "
+                  "connected = applies everywhere.")
+    k(mm)
 
     k(nuke.Text_Knob("div_track", "Tracking (optional)"))
     tk = nuke.String_Knob("tracker", "tracker / transform")

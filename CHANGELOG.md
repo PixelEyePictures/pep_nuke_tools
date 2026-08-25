@@ -3,8 +3,9 @@
 ## Unreleased
 - **Spot Remover**: fast, smooth exponential-blur spot / marker fill (plate +
   matte inputs) with Fill Blur / Edge Blur / Sample Size / Blur Angle; reusable
-  engine. **v1.1** adds a **tracker link** — link a Tracker / match-move
-  Transform and the matte + fill follow the track.
+  engine. **v1.1** adds a **tracker link** (link a Tracker / match-move
+  Transform and the matte + fill follow the track) and an optional **hold-out
+  mask input** with **Limit / Protect** modes.
 - **Marker Cleanup**: new **Smooth fill (Spot Remover)** mode — fills the keyed
   marker matte with the Spot Remover engine instead of a single blur.
 - **TrackPin**: stabilize / match‑move CornerPin rig — fill corners from a

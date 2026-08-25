@@ -202,7 +202,10 @@ Fast, smooth spot / marker fill (builds a group).
 3. **Sample Size** = how far outside the spot to sample from; **Edge Blur** =
    softness on the matte edge; **Blur Angle** = directional bias; **mix** =
    blend against the original.
-4. **Follow a track:** put a Tracker (match‑move) or a Transform exported from it
+4. **Hold‑out mask (input 3):** connect a mask and set **mask mode** — *Limit
+   fill to mask* (the fill only lands inside it) or *Protect* (keep the fill out
+   of it, e.g. an actor). No mask connected = applies everywhere.
+5. **Follow a track:** put a Tracker (match‑move) or a Transform exported from it
    in the **tracker** field (or *Set from selected*) and press **Link tracker** —
    the matte and the fill ride the track for the whole shot. *Unlink* resets it.
 
