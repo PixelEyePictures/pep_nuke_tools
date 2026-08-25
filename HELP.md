@@ -192,6 +192,21 @@ Match / neutralise / crush the low range only (builds a group).
 4. **Softness** feathers the correction into the mids. **Clamp** holds the low
    end to the Target. Mask input + **mix** as usual.
 
+## Spot Remover  (PEP Tools → Spot Remover)
+
+Fast, smooth spot / marker fill (builds a group).
+
+1. Feed the **plate** into input 1 and a **matte** over the spot into input 2
+   (painted alpha or a white blob both work).
+2. Raise **Fill Blur Size** until the hole fills from the surrounding pixels.
+3. **Sample Size** = how far outside the spot to sample from; **Edge Blur** =
+   softness on the matte edge; **Blur Angle** = directional bias; **mix** =
+   blend against the original.
+
+The surrounding pixels are premultiplied and spread inward with an exponential
+blur, then keyed back over the spot. The same engine powers Marker Cleanup's
+**Smooth fill** mode, which drives it from a keyed marker matte.
+
 ---
 
 _Pixel Eye Pictures — GPL‑3.0._

@@ -22,6 +22,8 @@ _m.addCommand("Gradient (multi-stop / depth fog)",
               "import pep_gradient as pg; pg.build_gradient()")
 _m.addCommand("Match Blacks",
               "import pep_match_blacks as mb; mb.build_match_blacks()")
+_m.addCommand("Spot Remover",
+              "import pep_spot_remover as sr; sr.build_spot_remover()")
 _m.addCommand("Marker Cleanup",
               "import pep_marker_cleanup as mc; mc.launch_marker_cleanup()")
 _m.addCommand("Read Node Manager",

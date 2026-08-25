@@ -303,6 +303,56 @@ def _pep_footer():
     return lbl
 
 
+def build_smooth_patch_network(plate, fill_size=40, grow=3):
+    """Marker patch fill using the PEP Spot Remover engine (exponential-blur
+    fill) instead of a single blur - smoother and faster. Keys the dark
+    markers, grows the matte, then feeds plate + matte to the shared engine."""
+    import pep_spot_remover as sr   # sibling module in this package
+
+    x, y = plate.xpos(), plate.ypos()
+    src = nuke.nodes.Dot(name="MC_src", xpos=x + 34, ypos=y + 80)
+    src.setInput(0, plate)
+
+    key = nuke.nodes.Keyer(name="MC_DarkKey")
+    key.setInput(0, src)
+    key["operation"].setValue("luminance key")
+    key["output"].setValue("alpha")
+    key["range"].setValue([0.0, 0.0, 0.08, 0.15])
+    key.setXYpos(src.xpos(), src.ypos() + 60)
+    key["label"].setValue("isolate the DARK markers (tune range)")
+
+    roto = nuke.nodes.Roto(name="MC_Region")
+    roto.setInput(0, key)
+    roto.setXYpos(key.xpos(), key.ypos() + 40)
+    roto["label"].setValue("(optional) limit to marker regions")
+
+    dilate = nuke.nodes.Dilate(name="MC_Grow")
+    dilate.setInput(0, roto)
+    dilate["size"].setValue(grow)
+    dilate.setXYpos(roto.xpos(), roto.ypos() + 40)
+
+    # shared Spot Remover engine, driven with the panel's values
+    filled = sr.build_fill(src, dilate,
+                           ns_expr=str(grow), edge_expr="2",
+                           fill_expr=str(fill_size), rot_expr="0")
+    filled.setName("MC_SpotFill")
+    filled.setXYpos(dilate.xpos(), dilate.ypos() + 200)
+
+    bd = nuke.nodes.BackdropNode(name="MC_Backdrop")
+    bd["label"].setValue("PEP Marker Cleanup\nSmooth fill (Spot Remover)")
+    bd["note_font_size"].setValue(28)
+    bd["tile_color"].setValue(0x335544ff)
+    bd["xpos"].setValue(min(src.xpos(), filled.xpos()) - 60)
+    bd["ypos"].setValue(src.ypos() - 90)
+    bd["bdwidth"].setValue(360)
+    bd["bdheight"].setValue(520)
+
+    for n in nuke.selectedNodes():
+        n["selected"].setValue(False)
+    filled["selected"].setValue(True)
+    return filled
+
+
 def _show_help(parent, title, html):
     dlg = QtWidgets.QDialog(parent)
     dlg.setWindowTitle(title)
@@ -380,7 +430,8 @@ class MarkerCleanupDialog(QtWidgets.QDialog):
         form = QtWidgets.QFormLayout()
         self.method = QtWidgets.QComboBox()
         self.method.addItems(["Channel swap (coloured markers)",
-                              "Patch fill (black / neutral markers)"])
+                              "Patch fill (black / neutral markers)",
+                              "Smooth fill (Spot Remover)"])
         form.addRow("Method:", self.method)
 
         # -- channel-swap controls --
@@ -471,9 +522,12 @@ class MarkerCleanupDialog(QtWidgets.QDialog):
                     nuke.message("Damaged and donor channels must differ.")
                     return
                 build_network(plate, damaged, donor, self.pre_grade.isChecked())
-            else:
+            elif self.method.currentIndex() == 1:
                 build_patch_network(plate, self.fill_size.value(),
                                     self.grow.value())
+            else:
+                build_smooth_patch_network(plate, self.fill_size.value(),
+                                           self.grow.value())
             self.accept()
             if hasattr(nuke, "zoomToFitSelected"):
                 nuke.zoomToFitSelected()
