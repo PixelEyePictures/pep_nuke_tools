@@ -107,6 +107,10 @@ matte over the spot into input 2 (painted alpha or a white blob both work).</p>
 <li><b>Blur Angle</b> - directional bias (like a directional blur).</li>
 <li><b>mix</b> - blend against the original.</li>
 </ol>
+<p><b>Follow a track:</b> put a Tracker (match-move) or a Transform exported from
+it in the <b>tracker</b> field (or <i>Set from selected</i>) and press
+<b>Link tracker</b> - the matte and the fill ride the track over the shot.
+<i>Unlink</i> resets it.</p>
 <p>The surrounding pixels are premultiplied and spread inward with an
 exponential blur, then keyed back in over the spot. Stock nodes, no plugins.</p>
 <p style="color:#888">Pixel Eye Pictures</p>
@@ -118,6 +122,74 @@ def show_help(group=None):
 
 
 # --------------------------------------------------------------------------- #
+# Tracking: make the matte (and so the fill) follow a Tracker / Transform
+# --------------------------------------------------------------------------- #
+_TRACK_KNOBS = ("translate", "rotate", "scale", "skewX", "skewY", "center")
+
+
+def set_tracker_from_selected(group=None):
+    """Fill the 'tracker' field from the currently selected node."""
+    group = group or nuke.thisNode()
+    fn = group.fullName()
+    for n in nuke.selectedNodes():
+        if n.fullName() != fn:
+            group["tracker"].setValue(n.name())
+            return
+    nuke.message("Select the Tracker / Transform node first.")
+
+
+def link_tracker(group=None):
+    """Copy a Tracker's / match-move Transform's animation onto the matte, so
+    the spot fill follows the track."""
+    group = group or nuke.thisNode()
+    name = group["tracker"].value().strip()
+    if not name:
+        nuke.message("Type or drop a Tracker / Transform node name into "
+                     "'tracker' (or use 'Set from selected').")
+        return
+    src = nuke.toNode(name)
+    if src is None:
+        nuke.message("Node '%s' not found." % name)
+        return
+    mt = _inner(group, "MatteTrack")
+    linked = 0
+    for kn in _TRACK_KNOBS:
+        if kn not in src.knobs() or kn not in mt.knobs():
+            continue
+        s, d = src[kn], mt[kn]
+        size = d.arraySize() if hasattr(d, "arraySize") else 1
+        for c in range(size):
+            anim = s.animation(c) if s.isAnimated() else None
+            if anim is not None:
+                d.copyAnimation(c, anim)
+            else:
+                try:
+                    d.setValue(s.getValue(c) if size > 1 else s.getValue(), c)
+                except Exception:  # noqa: BLE001
+                    pass
+        linked += 1
+    nuke.message("Linked the matte to %s (%d knobs). The spot fill now follows "
+                 "the track.\n\nTip: link a Tracker set to match-move, or a "
+                 "Transform exported from your Tracker." % (name, linked))
+
+
+def unlink_tracker(group=None):
+    """Drop the track link and reset the matte transform to identity."""
+    group = group or nuke.thisNode()
+    mt = _inner(group, "MatteTrack")
+    for kn in _TRACK_KNOBS:
+        if kn in mt.knobs():
+            try:
+                mt[kn].clearAnimated()
+            except Exception:  # noqa: BLE001
+                pass
+    mt["translate"].setValue([0, 0])
+    mt["rotate"].setValue(0)
+    mt["scale"].setValue(1)
+    nuke.message("Unlinked - the matte is back to identity.")
+
+
+# --------------------------------------------------------------------------- #
 # Build the standalone node
 # --------------------------------------------------------------------------- #
 _FOOTER = ('Pixel Eye Pictures&nbsp;&nbsp;|&nbsp;&nbsp;'
@@ -125,11 +197,11 @@ _FOOTER = ('Pixel Eye Pictures&nbsp;&nbsp;|&nbsp;&nbsp;'
            'href="https://github.com/PixelEyePictures/pep_nuke_tools">GitHub</a>')
 
 
-_VERSION = "1.0"
+_VERSION = "1.1"
 _RELEASED = "2026-08-23"
-_NOTES = ("First PEP release. Exponential-blur spot fill rebuilt from scratch "
-          "with Fill Blur, Edge Blur, Sample Size and Blur Angle controls; "
-          "reusable engine shared with Marker Cleanup.")
+_NOTES = ("Exponential-blur spot fill with Fill Blur, Edge Blur, Sample Size "
+          "and Blur Angle; reusable engine shared with Marker Cleanup. v1.1 "
+          "adds a tracker link so the matte and fill follow a track.")
 
 
 def _btn(name, label, fn):
@@ -157,7 +229,10 @@ def build_spot_remover():
     with group:
         rgba = nuke.nodes.Input(name="rgba")
         matte = nuke.nodes.Input(name="matte"); matte["number"].setValue(1)
-        filled = build_fill(rgba, matte)
+        # optional tracking: the matte (and so the fill) rides a linked track
+        mtrack = nuke.nodes.Transform(name="MatteTrack"); mtrack.setInput(0, matte)
+        mtrack["black_outside"].setValue(False)
+        filled = build_fill(rgba, mtrack)
         mix = nuke.nodes.Dissolve(name="Mix")
         mix.setInput(0, filled); mix.setInput(1, rgba)   # which=0 -> filled (mix=1)
         mix["which"].setExpression("1-parent.mix")
@@ -174,6 +249,16 @@ def build_spot_remover():
     ba = nuke.Double_Knob("BlurAngle", "Blur Angle"); ba.setRange(-180, 180)
     ba.setValue(0); k(ba)
     mx = nuke.Double_Knob("mix", "mix"); mx.setRange(0, 1); mx.setValue(1); k(mx)
+
+    k(nuke.Text_Knob("div_track", "Tracking (optional)"))
+    tk = nuke.String_Knob("tracker", "tracker / transform")
+    tk.setTooltip("Name of a Tracker (match-move) or a Transform exported from "
+                  "it. Link it so the matte and the fill follow the track.")
+    k(tk)
+    sset = _btn("set_from_sel", "Set from selected", "set_tracker_from_selected")
+    sset.setFlag(nuke.STARTLINE); k(sset)
+    k(_btn("link_trk", "Link tracker", "link_tracker"))
+    k(_btn("unlink_trk", "Unlink", "unlink_tracker"))
 
     k(nuke.Text_Knob("footer", "", _FOOTER))
     k(nuke.Tab_Knob("help_tab", "Help"))

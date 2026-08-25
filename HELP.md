@@ -202,6 +202,9 @@ Fast, smooth spot / marker fill (builds a group).
 3. **Sample Size** = how far outside the spot to sample from; **Edge Blur** =
    softness on the matte edge; **Blur Angle** = directional bias; **mix** =
    blend against the original.
+4. **Follow a track:** put a Tracker (match‑move) or a Transform exported from it
+   in the **tracker** field (or *Set from selected*) and press **Link tracker** —
+   the matte and the fill ride the track for the whole shot. *Unlink* resets it.
 
 The surrounding pixels are premultiplied and spread inward with an exponential
 blur, then keyed back over the spot. The same engine powers Marker Cleanup's
