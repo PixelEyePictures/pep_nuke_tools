@@ -46,6 +46,10 @@ fallback for Nuke 15+).
 
 ![Clipping Degrain](images/clipping_degrain_before_after.png)
 
+**Spot Remover** — pull surrounding pixels in to fill a spot / marker (before / after):
+
+![Spot Remover](images/spotremover_before_after.png)
+
 ---
 
 ## Tools
