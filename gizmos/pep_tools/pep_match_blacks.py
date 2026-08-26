@@ -153,7 +153,22 @@ Target from the reference's blacks.</p>
 
 
 def show_help(group=None):
-    nuke.message(_HELP_HTML)
+    try:
+        from PySide2 import QtWidgets
+    except ImportError:
+        from PySide6 import QtWidgets
+    dlg = QtWidgets.QDialog()
+    dlg.setWindowTitle("PEP Match Blacks - Help")
+    dlg.resize(560, 520)
+    lay = QtWidgets.QVBoxLayout(dlg)
+    view = QtWidgets.QTextBrowser()
+    view.setOpenExternalLinks(True)
+    view.setHtml(_HELP_HTML)
+    lay.addWidget(view)
+    btns = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+    btns.rejected.connect(dlg.reject)
+    lay.addWidget(btns)
+    dlg.exec_()
 
 
 # --------------------------------------------------------------------------- #
