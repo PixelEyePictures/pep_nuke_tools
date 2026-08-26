@@ -50,6 +50,10 @@ fallback for Nuke 15+).
 
 ![Spot Remover](images/spotremover_before_after.png)
 
+**Script Doctor** — offline rescue for a `.nk` that won't open or crashes on load:
+
+![Script Doctor](images/script_doctor.png)
+
 ---
 
 ## Tools
