@@ -30,3 +30,5 @@ _m.addCommand("Read Node Manager",
               "import pep_read_manager as rm; rm.launch_read_manager()")
 _m.addCommand("Rename & Relink (on disk)",
               "import pep_tagrename as tr; tr.launch_tagrename()")
+_m.addCommand("Script Doctor (rescue a .nk)",
+              "import pep_script_doctor_ui as sd; sd.launch()")

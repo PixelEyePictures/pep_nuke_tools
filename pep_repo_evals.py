@@ -83,7 +83,7 @@ readme = read(os.path.join(REPO, "README.md"))
 helpmd = read(os.path.join(REPO, "HELP.md"))
 change = read(os.path.join(REPO, "CHANGELOG.md"))
 SHIPPED = ["TrackPin", "Clipping Degrain", "Gradient", "Match Blacks",
-           "Spot Remover", "Marker Cleanup", "Read Node Manager"]
+           "Spot Remover", "Marker Cleanup", "Read Node Manager", "Script Doctor"]
 doc_bad = []
 for tool in SHIPPED:
     where = [d for d, txt in (("README", readme), ("HELP", helpmd), ("CHANGELOG", change))

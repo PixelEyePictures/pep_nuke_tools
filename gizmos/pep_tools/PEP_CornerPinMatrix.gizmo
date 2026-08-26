@@ -16,15 +16,15 @@ Gizmo {
  addUserKnob {26 pep_credit l "" +STARTLINE T "Pixel Eye Pictures  |  <a href=\"https://github.com/PixelEyePictures/pep_nuke_tools\"><font color=\"#7aa2f7\">GitHub</font></a>"}
  addUserKnob {20 cpm_mtx l Matrix}
  addUserKnob {43 matrix_str l matrix}
- addUserKnob {22 solve l "Solve (current frame)" -STARTLINE T "import sys\nsys.path.insert(0, r'C:\\Users\\Anuj\\.nuke\\PEP_CornerPinMatrix')\nimport pep_cornerpin_matrix as pm\npm.gizmo_solve(nuke.thisNode())"}
- addUserKnob {22 copymtx l "Copy to clipboard" -STARTLINE T "import sys\nsys.path.insert(0, r'C:\\Users\\Anuj\\.nuke\\PEP_CornerPinMatrix')\nimport pep_cornerpin_matrix as pm\npm.gizmo_copy(nuke.thisNode())"}
+ addUserKnob {22 solve l "Solve (current frame)" -STARTLINE T "import pep_cornerpin_matrix as pm\npm.gizmo_solve(nuke.thisNode())"}
+ addUserKnob {22 copymtx l "Copy to clipboard" -STARTLINE T "import pep_cornerpin_matrix as pm\npm.gizmo_copy(nuke.thisNode())"}
  addUserKnob {26 sp_b l "" +STARTLINE}
  addUserKnob {6 bake l "bake animation over range when pasting" +STARTLINE}
  addUserKnob {3 first}
  first 1
  addUserKnob {3 last -STARTLINE}
  last 100
- addUserKnob {22 paste l "Paste matrix into selected node" -STARTLINE T "import sys\nsys.path.insert(0, r'C:\\Users\\Anuj\\.nuke\\PEP_CornerPinMatrix')\nimport pep_cornerpin_matrix as pm\npm.gizmo_paste(nuke.thisNode())"}
+ addUserKnob {22 paste l "Paste matrix into selected node" -STARTLINE T "import pep_cornerpin_matrix as pm\npm.gizmo_paste(nuke.thisNode())"}
  addUserKnob {20 help_tab l Help}
  addUserKnob {26 help_txt l "" +STARTLINE T "<b>PEP CornerPin to Matrix</b><br><br>Turns a corner-pin into a 4x4 matrix and pastes it into another node, so a Roto / RotoPaint follows the pin.<br><br><b>1.</b> Set the <i>to/from</i> corners (or link them to your tracked CornerPin).<br><b>2.</b> Select this gizmo <b>and</b> the node to drive.<br><b>3.</b> On the Matrix tab press <i>Paste matrix into selected node</i>. Tick <i>bake</i> + set first/last for tracked pins.<br><br><b>invert</b> - flip the direction if it moves the wrong way.<br><br>Targets: CornerPin2D and Roto/RotoPaint.<br><br>Need a live, self-updating link? Use the <b>v2</b> gizmo."}
 }

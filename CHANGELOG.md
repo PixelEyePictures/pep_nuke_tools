@@ -1,6 +1,14 @@
 # Changelog
 
 ## Unreleased
+- **Script Doctor**: offline rescue for a `.nk` that won't open / crashes on
+  load — never opens the scene, reads the script as text and writes safe copies
+  next to it (original untouched). Rescue steps (remove/disable Viewers, strip
+  callbacks, drop plugin/postage nodes, bisect the graph, stereo-safe Viewer
+  handling, strip stray non-ASCII), an **Analyze** pass to target node types,
+  **Match nodes** by name or knob value (disable / disconnect / remove), and an
+  optional **crash-log** drop that auto-targets the culprit. Includes a
+  no-install **paste-into-Script-Editor** edition.
 - **Spot Remover**: fast, smooth exponential-blur spot / marker fill (plate +
   matte inputs) with Fill Blur / Edge Blur / Sample Size / Blur Angle; reusable
   engine. **v1.1** adds a **tracker link** (link a Tracker / match-move

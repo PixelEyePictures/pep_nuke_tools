@@ -213,6 +213,46 @@ The surrounding pixels are premultiplied and spread inward with an exponential
 blur, then keyed back over the spot. The same engine powers Marker Cleanup's
 **Smooth fill** mode, which drives it from a keyed marker matte.
 
+## Script Doctor  (PEP Tools → Script Doctor)
+
+Rescue a `.nk` that won't open or crashes on load. It works **completely
+offline** — it never opens the scene. It reads the script as **text** and writes
+safe, openable copies next to it; the **original is never modified**.
+
+1. Set **Script** to the crashing `.nk` — Browse, or **drag it onto the panel**.
+   (You can also point it at a folder to batch a whole directory.)
+2. Leave the **rescue steps** ticked (all on by default) or untick any you don't
+   want, then press **Rescue**.
+3. A folder `<script>_doctor` is created next to the original, containing the
+   **report** (`…_doctor_report.txt`, read this first), an untouched
+   **original copy**, one **rescued `.nk` per step**, a **paused launcher**
+   (`open_paused_….bat`, opens Nuke with `--pause` so nothing evaluates), and any
+   **autosaves/backups** found nearby.
+4. Open the report and work **down the recovery order** — start with the paused
+   launcher, then no-Viewers, disable-all, no-callbacks, and so on; each rescued
+   copy isolates one class of load crash (Viewer eval, callback, corrupt Roto,
+   heavy node, missing plugin, postage-stamp thumbnail, stereo/multi-Viewer,
+   stray non-ASCII), with a bisect pass to narrow down which half holds the
+   culprit.
+
+**Target specific node types.** Press **Analyze script** to list every node type
+and its count (heavy and plugin types are pre-ticked). Tick what you suspect,
+then **Disable ticked** or **Remove ticked** for a surgical rescue.
+
+**Match nodes.** Already know the offender? In the **Match nodes** box, enter a
+name (e.g. `Blur7`) or a label, choose **node name** or **any knob value**, and
+**disable / disconnect / remove** just the matches (plain text or regex). Writes
+one targeted copy and lists every node it touched.
+
+**Crash log (optional).** Drop the crash log from the session that died onto the
+panel (or into the **Crash log** field). Script Doctor scans it for the node it
+crashed on and adds a targeted `rescued_from_crashlog.nk`. A dropped `.nk` sets
+Script; any other file sets the Crash log.
+
+**No install needed.** For a locked-down workstation, the standalone
+[paste edition](docs/PEP_ScriptDoctor_paste.py) runs from Nuke's Script Editor
+(or any Python 3) with the same engine — toggle the rescues at the top and run.
+
 ---
 
 _Pixel Eye Pictures — GPL‑3.0._
