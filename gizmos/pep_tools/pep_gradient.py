@@ -20,6 +20,8 @@ Pixel Eye Pictures.
 
 import nuke
 
+_VERSION = "1.1"
+_RELEASED = "2026-08-30"
 MAX_STOPS = 8
 _SWITCH = "ShapeSwitch"
 _GRAD = "Grad"
@@ -97,8 +99,8 @@ def randomize_seed(group=None):
 # --------------------------------------------------------------------------- #
 # Help
 # --------------------------------------------------------------------------- #
-_HELP_HTML = """
-<h3>PEP Gradient</h3>
+_HELP_HTML = ("""
+<h3>PEP Gradient <span style="color:#888">v""" + _VERSION + """</span></h3>
 <p>A multi-stop background / gradient generator with shapes, depth fog and
 noise break-up.</p>
 <ol>
@@ -118,7 +120,22 @@ lays the gradient over the image on the input as a graduated colour wash - pick 
 <p>Stops (up to 8, or edit the freeform curve) drive a ColorLookup, so it's a
 true multi-colour gradient. Everything is stock nodes - no plugins.</p>
 <p style="color:#888">Pixel Eye Pictures</p>
-"""
+""")
+
+_ABOUT_HTML = """
+<h3>PEP Gradient <span style="color:#888">v%s</span></h3>
+<p>Multi-stop background / gradient generator - shapes, depth fog, noise
+break-up, and a grade-plate mode. Built from stock Nuke nodes, no plugins.</p>
+<p><b>Version %s</b> &nbsp;(%s)</p>
+<ul>
+<li>Colour stops raised 4 &rarr; 8, plus an editable <b>freeform curve</b> for
+unlimited stops.</li>
+<li>New <b>Grade-plate</b> output mode: lay the gradient over an input image as a
+graduated colour wash (over / multiply / screen / overlay / soft-light / plus,
+with opacity).</li>
+</ul>
+<p style="color:#888">Pixel Eye Pictures</p>
+""" % (_VERSION, _VERSION, _RELEASED)
 
 
 def show_help(group=None):
@@ -352,6 +369,10 @@ def build_gradient():
     hb = _btn("help_btn", "Open help", "show_help"); hb.setFlag(nuke.STARTLINE)
     k(hb)
     k(nuke.Text_Knob("footer2", "", _FOOTER))
+
+    k(nuke.Tab_Knob("about_tab", "About"))
+    k(nuke.Text_Knob("about_text", "", _ABOUT_HTML))
+    k(nuke.Text_Knob("footer3", "", _FOOTER))
 
     rebuild_lut(group)
     _sync_blend(group)
