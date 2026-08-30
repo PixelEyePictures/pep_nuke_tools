@@ -167,7 +167,8 @@ adds the denoise itself.
 Multi‑stop background / gradient generator with shapes, depth fog and noise
 break‑up (builds a group, input‑less unless you use Depth).
 
-1. Set **number of stops** (1–4) and each stop's **colour** + **position**.
+1. Set **number of stops** (1–8) and each stop's **colour** + **position**, or
+   edit the **curve (freeform)** knob directly for an unlimited multi‑stop ramp.
 2. Pick a **shape**: Linear (drag **RampFrom0 / Rampto1**), Radial / Box /
    Diamond (set **centre** + **radius**; tick **lock centre** so you don't nudge
    it), or **Depth**.
@@ -176,6 +177,10 @@ break‑up (builds a group, input‑less unless you use Depth).
 4. **Break‑up**: raise **noise amount** to disturb the gradient (kills banding,
    makes fog patchy); **noise blur** softens the noise, **smooth** blurs the
    final result.
+5. **Output mode**: *Generate* outputs the gradient itself; *Grade plate* lays
+   the gradient over the image on the input as a graduated colour wash — choose a
+   **blend** (over / multiply / screen / overlay / soft‑light / plus) and
+   **opacity**. Handy for sky grads, day‑for‑night falloff and edge vignettes.
 
 ---
 

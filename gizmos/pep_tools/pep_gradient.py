@@ -1,9 +1,9 @@
 """PEP Gradient.
 
-A robust background / gradient generator - much more than a base colour and a
-single ramp:
+A robust background / gradient generator - the simple base-plus-ramp idea
+(Constant + one Ramp), rebuilt and extended:
 
-  * Up to 4 colour stops (position + colour each) via a ColorLookup, so it's a
+  * Up to 8 colour stops (position + colour each) via a ColorLookup, so it's a
     real multi-stop gradient, not just base + ramp.
   * Shapes: Linear, Radial (circle), Box (square), Diamond, and Depth.
   * Depth mode: plug a depth pass into the input and it remaps the depth
@@ -20,10 +20,13 @@ Pixel Eye Pictures.
 
 import nuke
 
-MAX_STOPS = 4
+MAX_STOPS = 8
 _SWITCH = "ShapeSwitch"
 _GRAD = "Grad"
 _NOISE = "NoiseGen"
+_MERGE = "GradeMerge"
+_OUTSW = "OutputSwitch"
+_BLENDS = ["over", "multiply", "screen", "overlay", "soft-light", "plus"]
 
 # shape index -> inner source node feeding the ShapeSwitch
 _SHAPES = ["Linear", "Radial", "Box", "Diamond", "Depth"]
@@ -69,8 +72,20 @@ def on_knob_changed(group=None, knob=None):
     if name == "num_stops":
         group["num_stops"].setValue(min(int(group["num_stops"].value()), MAX_STOPS))
         rebuild_lut(group)
+    elif name == "blend":
+        _sync_blend(group)
     elif name.startswith("color") or name.startswith("pos"):
         rebuild_lut(group)
+
+
+def _sync_blend(group=None):
+    """Push the 'blend' pull-down onto the inner grade Merge's operation."""
+    group = group or nuke.thisNode()
+    try:
+        idx = int(group["blend"].getValue())
+        _inner(group, _MERGE)["operation"].setValue(_BLENDS[idx])
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def randomize_seed(group=None):
@@ -87,7 +102,7 @@ _HELP_HTML = """
 <p>A multi-stop background / gradient generator with shapes, depth fog and
 noise break-up.</p>
 <ol>
-<li>Set <b>number of stops</b> (1-4) and each stop's <b>colour</b> + <b>position</b>
+<li>Set <b>number of stops</b> (1-8) and each stop's <b>colour</b> + <b>position</b>
 (0 = start, 1 = end).</li>
 <li>Pick a <b>shape</b>: Linear (drag the ramp handles), Radial / Box / Diamond
 (set centre + radius), or <b>Depth</b>.</li>
@@ -95,9 +110,13 @@ noise break-up.</p>
 near / far</b> to frame the range - the stops become a depth fog.</li>
 <li><b>Break-up</b>: raise <b>noise amount</b> to disturb the gradient (kills
 banding, makes fog patchy). Tune <b>size / detail / gain / seed</b>.</li>
+<li><b>Output mode</b>: <i>Generate</i> outputs the gradient. <i>Grade plate</i>
+lays the gradient over the image on the input as a graduated colour wash - pick a
+<b>blend</b> (over / multiply / screen / overlay / soft-light / plus) and
+<b>opacity</b>. Great for sky grads, day-for-night falloff, edge vignettes.</li>
 </ol>
-<p>Stops drive a ColorLookup, so it's a true multi-colour gradient. Everything
-is stock nodes - no plugins.</p>
+<p>Stops (up to 8, or edit the freeform curve) drive a ColorLookup, so it's a
+true multi-colour gradient. Everything is stock nodes - no plugins.</p>
 <p style="color:#888">Pixel Eye Pictures</p>
 """
 
@@ -133,6 +152,10 @@ _DEFAULT_COLORS = [
     (0.90, 0.10, 0.09, 1.0),  # ramp red
     (0.10, 0.20, 0.60, 1.0),
     (0.95, 0.95, 0.95, 1.0),
+    (0.95, 0.75, 0.10, 1.0),  # amber
+    (0.60, 0.15, 0.70, 1.0),  # purple
+    (0.10, 0.70, 0.75, 1.0),  # teal
+    (0.05, 0.05, 0.05, 1.0),  # near-black
 ]
 
 # shape-field expressions (write grayscale t into r,g,b)
@@ -210,7 +233,19 @@ def build_gradient():
         outb = nuke.nodes.Blur(name="OutBlur"); outb.setInput(0, grad)
         outb["size"].setExpression("parent.smooth")
 
-        out = nuke.nodes.Output(name="Output1"); out.setInput(0, outb)
+        # grade-by-gradient: composite the gradient (A) over the plate (B) on
+        # the input, as a graduated colour wash / grad-filter.
+        gmerge = nuke.nodes.Merge2(name=_MERGE)
+        gmerge.setInput(0, inp)    # B = plate
+        gmerge.setInput(1, outb)   # A = gradient
+        gmerge["mix"].setExpression("parent.opacity")
+
+        osw = nuke.nodes.Switch(name=_OUTSW)
+        osw.setInput(0, outb)      # 0 = generate the gradient
+        osw.setInput(1, gmerge)    # 1 = grade the plate
+        osw["which"].setExpression("parent.output_mode")
+
+        out = nuke.nodes.Output(name="Output1"); out.setInput(0, osw)
 
     k = group.addKnob
     k(nuke.Tab_Knob("gradient", "Gradient"))
@@ -244,7 +279,7 @@ def build_gradient():
     df.setValue(1000); k(df)
 
     # stops
-    k(nuke.Text_Knob("div_stops", "Colour stops"))
+    k(nuke.Text_Knob("div_stops", "Colour stops (up to 8, or edit the curve)"))
     ns = nuke.Int_Knob("num_stops", "number of stops"); ns.setRange(1, MAX_STOPS)
     ns.setValue(2); k(ns)
     for i in range(1, MAX_STOPS + 1):
@@ -255,6 +290,18 @@ def build_gradient():
         p.setRange(0, 1); p.setValue(round((i - 1) / float(MAX_STOPS - 1), 3))
         p.clearFlag(nuke.STARTLINE)
         k(p)
+
+    # freeform multi-stop curve (GradientEditor-style): edit the colour curve
+    # directly for as many stops as you like, beyond the numbered ones above.
+    try:
+        curve = nuke.Link_Knob("gradient_curve", "curve (freeform)")
+        curve.makeLink(_inner(group, _GRAD).fullName(), "lut")
+        curve.setTooltip("The gradient's colour ramp as an editable curve - add / "
+                         "drag points for an unlimited multi-stop gradient. Edits "
+                         "here are overwritten if you change the numbered stops.")
+        k(curve)
+    except Exception:  # noqa: BLE001
+        pass
 
     # break-up
     k(nuke.Text_Knob("div_noise", "Break-up (noise)"))
@@ -282,6 +329,22 @@ def build_gradient():
     sm.setTooltip("Blur the final gradient - softens banding and the noise break-up.")
     k(sm)
 
+    # grade-by-gradient
+    k(nuke.Text_Knob("div_mode", "Output mode"))
+    om = nuke.Enumeration_Knob("output_mode", "mode",
+                               ["Generate gradient", "Grade plate (input)"])
+    om.setTooltip("Generate: output the gradient itself.\nGrade plate: composite the "
+                  "gradient over the image plugged into the input, as a graduated "
+                  "colour wash / grad-filter (a la a grad ND).")
+    k(om)
+    bl = nuke.Enumeration_Knob("blend", "blend", _BLENDS)
+    bl.setTooltip("Blend mode used to lay the gradient over the plate (grade mode).")
+    k(bl)
+    op = nuke.Double_Knob("opacity", "opacity"); op.setRange(0, 1)
+    op.setValue(1.0)
+    op.setTooltip("Strength of the gradient wash over the plate (grade mode).")
+    k(op)
+
     k(nuke.Text_Knob("footer", "", _FOOTER))
 
     k(nuke.Tab_Knob("help_tab", "Help"))
@@ -291,6 +354,7 @@ def build_gradient():
     k(nuke.Text_Knob("footer2", "", _FOOTER))
 
     rebuild_lut(group)
+    _sync_blend(group)
     if "knobChanged" in group.knobs():
         group["knobChanged"].setValue(
             "import pep_gradient; "

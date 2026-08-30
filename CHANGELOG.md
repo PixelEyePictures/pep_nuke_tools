@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Gradient**: colour stops raised **4 → 8** (plus an editable **freeform
+  curve** for unlimited stops), and a new **Grade‑plate** output mode — lay the
+  gradient over an input image as a graduated colour wash (over / multiply /
+  screen / overlay / soft‑light / plus, with opacity). Generate mode is
+  unchanged. All stock nodes, no plugins.
 - **Script Doctor**: offline rescue for a `.nk` that won't open / crashes on
   load — never opens the scene, reads the script as text and writes safe copies
   next to it (original untouched). Rescue steps (remove/disable Viewers, strip

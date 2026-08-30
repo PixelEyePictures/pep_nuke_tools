@@ -38,6 +38,10 @@ fallback for Nuke 15+).
 
 ![Gradient](images/gradient_preview.png)
 
+**Gradient (grade-plate mode)** — the same gradient laid over a plate as a graduated colour wash (sky grad / day-for-night / edge vignette):
+
+![Gradient grade-plate](images/gradient_grade_preview.png)
+
 **Match Blacks** — clean a colour cast out of the shadows (before / after):
 
 ![Match Blacks](images/matchblacks_before_after.png)
@@ -70,7 +74,7 @@ fallback for Nuke 15+).
 | **Spot Remover** | Python (builds a group) | Fast, smooth spot / marker fill. Feed a plate and a matte over the spot; it pulls the surrounding pixels in and fills the hole with an **exponential blur** — smoother and faster than an iterative patch. **Fill Blur / Edge Blur / Sample Size / Blur Angle** controls, an optional **hold-out mask** (Limit / Protect), and a **tracker link** so the matte and fill follow a track. Reusable engine shared with Marker Cleanup. |
 | **TrackPin** | Python (builds a group) | A tidy **stabilize / match-move** CornerPin rig. Fill the `to` corners with a 4-point track, pick a **reference frame**, choose **Match Move** (a held still rides the track) or **Stabilize** (lock the plate). Fill from a Tracker's exported CornerPin, keep edges, bake to keyframes, or **Send to Matrix** to bake onto a Roto/RotoPaint. |
 | **Clipping Degrain** | Python (builds a group) | Denoise cleanly against crushed blacks / blown whites: lifts the signal off the clip point, denoises in the headroom, then reverses exactly. **No plugin lock-in** — swappable inner denoiser (Median / Nuke Denoise / **Neat Video** auto-detected) with an *Open denoiser controls* button. **Blacks / Whites / Both** mode; lossless when idle. |
-| **Gradient** | Python (builds a group) | Multi-stop background / gradient generator. **Up to 4 colour stops**, shapes **Linear / Radial / Box / Diamond / Depth**, and **noise break-up** to kill banding. **Depth mode** remaps a depth pass through the stops for an instant depth fog. Smooth (blur) controls, lockable centre handle. |
+| **Gradient** | Python (builds a group) | Multi-stop background / gradient generator. **Up to 8 colour stops** (or edit the freeform curve), shapes **Linear / Radial / Box / Diamond / Depth**, and **noise break-up** to kill banding. **Depth mode** remaps a depth pass through the stops for an instant depth fog. **Grade-plate mode** lays the gradient over an input image as a graduated colour wash (over / multiply / screen / overlay / soft-light / plus). Smooth (blur) controls, lockable centre handle. |
 | **Match Blacks** | Python (builds a group) | Match / neutralise / crush the **low range only** without touching mids or highlights. Remap a **Source** colour in the shadows to a **Target**. One-click **Neutralise** (kill a cast), **Zero blacks**, or **Match to reference** (sample a reference plate's blacks). **Softness** feathers into the mids. |
 | **Script Doctor** | Python (offline panel) | Rescue a `.nk` that **won't open or crashes on load** — completely **offline**, it never opens the scene, it reads the script as text and writes safe, openable copies (the original is never touched). One-click rescues (remove/disable Viewers, strip callbacks, drop plugin/postage nodes, bisect the graph, stereo-safe Viewer handling, strip stray non-ASCII), an **Analyze** pass to target specific node types, **Match nodes** by name or knob value (disable / disconnect / remove), and an optional **crash-log** drop that auto-targets the culprit node. A [paste-into-Script-Editor edition](docs/PEP_ScriptDoctor_paste.py) needs no install. |
 
@@ -177,6 +181,12 @@ Every gizmo also has a **Help** tab in its properties panel.
 1. **PEP Tools → Gradient**. Plug a **depth pass** into the input, set **shape = Depth**.
 2. Set **depth near / far** to frame the range, and set **colour stops** (e.g. clear → haze colour).
 3. Raise **noise amount** (and **noise blur / smooth**) for patchy, organic fog. Tick **lock centre** so you don't nudge the handle.
+
+### Grade a plate with a gradient (Gradient → grade-plate mode)
+1. **PEP Tools → Gradient**. Plug the **plate** you want to grade into the input.
+2. Set **output mode = Grade plate (input)**. Pick a **shape** (Linear for a sky/horizon grad) and drag the ramp handles.
+3. Set the **colour stops** for the wash — e.g. deep blue → warm horizon → clear for a sky, or a single dark stop for an edge vignette.
+4. Choose a **blend** (screen / soft-light lift, multiply darkens, over replaces) and dial **opacity**. Add a touch of **noise amount** to keep big skies from banding.
 
 ### Paint out a spot / marker (Spot Remover)
 1. Feed the plate into input 1 and a matte over the spot into input 2 (a painted alpha or a white blob both work).
