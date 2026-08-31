@@ -18,6 +18,8 @@ _m.addCommand("CornerPin to Matrix (panel)",
               "import pep_cornerpin_matrix as pm; pm.launch_cornerpin_matrix()")
 _m.addCommand("TrackPin (stabilize / match-move)",
               "import pep_trackpin as tp; tp.build_trackpin()")
+_m.addCommand("CornerPin 3D Points",
+              "import pep_cornerpin3d as cp3; cp3.build_cornerpin3d()")
 _m.addCommand("Clipping Degrain",
               "import pep_clipping_degrain as cd; cd.build_clipping_degrain()")
 _m.addCommand("Gradient (multi-stop / depth fog)",

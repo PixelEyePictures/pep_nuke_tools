@@ -154,6 +154,28 @@ Round trip: Stabilize → paint on the locked frame → switch to Match Move →
 
 ---
 
+## CornerPin 3D Points  (PEP Tools → CornerPin 3D Points)
+
+Project four 3D points through a camera into an animated CornerPin — stick a 2D
+element to a planar surface from a 3D track (builds a group).
+
+1. Connect **geometry** to input 1 and a **camera** to input 2.
+2. **pick from** *Selected vertices* (select 4 points on the geo in the 3D
+   viewer) or *Selected Axis nodes* (4 Axis / locator nodes), then **Get
+   Points** — or set each corner individually with **Set** (average of the
+   selected vertices) / **anim** (trace a moving cluster over the range).
+3. Set **first / last** (blank = whole script) and press **Generate**. The four
+   points are projected and auto‑ordered (bottom‑left, bottom‑right, top‑right,
+   top‑left) across the range.
+4. **Export CornerPin** makes a CornerPin2D; **Send to Matrix** hands it to
+   *CornerPin to Matrix* so a Roto / RotoPaint follows the plane; or **Export
+   1‑pt / 2‑pt Transform** bakes a match‑move (2‑pt adds rotation + scale from
+   the two chosen corners, relative to the **reference frame**).
+
+> The **status** line reports the next step at each stage.
+
+---
+
 ## Clipping Degrain  (PEP Tools → Clipping Degrain)
 
 Denoise cleanly against crushed blacks / blown whites (builds a group).

@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- **CornerPin 3D Points**: new tool — project four 3D points (geometry vertices
+  or Axis / locator nodes) through a camera into an **animated CornerPin**. Set
+  corners from a **vertex-cluster average** (static or traced over the range),
+  auto corner-ordering, whole-range solve, then **Export CornerPin**, **Send to
+  Matrix** (drive a Roto/paint), or bake a **match-move Transform** (1-point
+  translate, or 2-point translate + rotate/scale). Python 3 / Nuke 14 native.
 - **Script Doctor v1.2**: new **Safe Mode** rescue (removes Viewers, strips
   callbacks, turns off postage thumbnails and **neutralizes BlinkScript** in one
   pass — the catch-all for a scene that crashes the instant it opens) and a
