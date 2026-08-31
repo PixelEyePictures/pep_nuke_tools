@@ -10,6 +10,8 @@ _m.addCommand("CornerPin to Matrix (gizmo)",
               "nuke.createNode('PEP_CornerPinMatrix')")
 _m.addCommand("CornerPin to Matrix v2 (gizmo)",
               "nuke.createNode('PEP_CornerPinMatrix_v2')")
+_m.addCommand("CornerPin to Matrix v3 (gizmo)",
+              "nuke.createNode('PEP_CornerPinMatrix_v3')")
 _m.addCommand("Fringe Fix (gizmo)",
               "nuke.createNode('PEP_FringeFix')")
 _m.addCommand("CornerPin to Matrix (panel)",

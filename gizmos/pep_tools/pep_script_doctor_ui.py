@@ -27,8 +27,8 @@ _FOOTER = ('Pixel Eye Pictures&nbsp;&nbsp;|&nbsp;&nbsp;'
            '<a style="color:#7aa2f7" '
            'href="https://github.com/PixelEyePictures/pep_nuke_tools">GitHub</a>')
 
-_VERSION = "1.1"
-_RELEASED = "2026-08-26"
+_VERSION = "1.2"
+_RELEASED = "2026-08-30"
 
 _HELP = """<h2 style="margin:0 0 6px">PEP Script Doctor</h2>
 <p>Rescues a Nuke script that won't open or crashes on load. It <b>never opens
@@ -346,31 +346,62 @@ class ScriptDoctorPanel(QtWidgets.QDialog):
             self._assign(url.toLocalFile())
         e.acceptProposedAction()
 
+    def _set_busy(self, on, message=""):
+        """Enable/disable the action buttons and show a status while working."""
+        for b in (getattr(self, n, None) for n in
+                  ("rescue_btn", "analyze_btn", "dis_sel_btn", "rem_sel_btn",
+                   "match_btn")):
+            if b is not None:
+                b.setEnabled(not on)
+        if on and message:
+            self.output.setPlainText(message)
+
     def _rescue(self):
         from pathlib import Path
+        import threading
         f = self.script.text().strip()
         if not f or not os.path.exists(f):
             nuke.message("Pick a valid .nk (or folder).")
             return
         rescues = {n: cb.isChecked() for n, cb in self.checks.items()}
+        crash = self.crash.text().strip() or None
+        exe = nuke.EXE_PATH
         target = Path(f)
         scenes = ([target] if target.is_file()
                   else sorted(target.rglob("*.nk")))
-        log = []
-        for scene in scenes:
-            if "_doctor" in scene.parent.name:
-                continue
-            out = scene.with_name(scene.stem + "_doctor")
-            try:
-                sd.doctor_script(scene, out, nuke.EXE_PATH, rescues,
-                                 crash_log=(self.crash.text().strip() or None))
-                rep = out / ("%s_doctor_report.txt" % scene.stem)
-                log.append("== %s ==\nOutput: %s\n" % (scene.name, out))
-                if rep.exists():
-                    log.append(rep.read_text(encoding="utf-8"))
-            except Exception as e:  # noqa: BLE001
-                log.append("FAILED %s: %s" % (scene.name, e))
-        self.output.setPlainText("\n".join(log) if log else "No .nk found.")
+
+        # run the (pure-Python, Nuke-free) engine off the GUI thread so the
+        # panel never goes 'Not Responding' on a big script.
+        self._rescue_result = None
+        self._set_busy(True, "Rescuing - large scripts take a few seconds...")
+
+        def worker():
+            log = []
+            for scene in scenes:
+                if "_doctor" in scene.parent.name:
+                    continue
+                out = scene.with_name(scene.stem + "_doctor")
+                try:
+                    sd.doctor_script(scene, out, exe, rescues, crash_log=crash)
+                    rep = out / ("%s_doctor_report.txt" % scene.stem)
+                    log.append("== %s ==\nOutput: %s\n" % (scene.name, out))
+                    if rep.exists():
+                        log.append(rep.read_text(encoding="utf-8"))
+                except Exception as e:  # noqa: BLE001
+                    log.append("FAILED %s: %s" % (scene.name, e))
+            self._rescue_result = "\n".join(log) if log else "No .nk found."
+
+        threading.Thread(target=worker, daemon=True).start()
+        self._poll = QtCore.QTimer(self)
+        self._poll.timeout.connect(self._rescue_check)
+        self._poll.start(120)
+
+    def _rescue_check(self):
+        if getattr(self, "_rescue_result", None) is None:
+            return
+        self._poll.stop()
+        self.output.setPlainText(self._rescue_result)
+        self._set_busy(False)
 
 
 _panel = None

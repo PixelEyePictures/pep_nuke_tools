@@ -1,6 +1,17 @@
 # Changelog
 
 ## Unreleased
+- **Script Doctor v1.2**: new **Safe Mode** rescue (removes Viewers, strips
+  callbacks, turns off postage thumbnails and **neutralizes BlinkScript** in one
+  pass — the catch-all for a scene that crashes the instant it opens) and a
+  targeted **neutralize BlinkScript** rescue (a BlinkScript kernel compiles on
+  GUI open, so a bad one crashes on load and *disabling won't help* — it's turned
+  into a NoOp). The rescue panel no longer freezes on large scripts (the engine
+  now runs off the UI thread). Same two rescues added to the paste-in edition.
+- **CornerPin to Matrix v3** (`PEP_CornerPinMatrix_v3`): new gizmo — everything
+  in v2 plus **edge offsets** (top / bottom / left / right, in pixels) that push
+  each edge of the pinned quad out/in past the tracked corners for overscan /
+  edge bleed, baked into the matrix. v1 / v2 unchanged.
 - **Gradient**: colour stops raised **4 → 8** (plus an editable **freeform
   curve** for unlimited stops), and a new **Grade‑plate** output mode — lay the
   gradient over an input image as a graduated colour wash (over / multiply /

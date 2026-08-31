@@ -149,17 +149,27 @@ def make_report(script_path: Path, lines: list[str], nodes: list[NodeBlock]) -> 
     out.append("  Rescue copies are plain text .nk files.")
     out.append("  Missing-path detection skips expressions, hashes, and printf patterns.")
     out.append("")
-    out.append("If the script LOADS then CRASHES, try in this order:")
-    out.append("  1. open_paused_*.bat        -> opens with --pause (nothing evaluates).")
-    out.append("  2. rescued_no_viewers.nk    -> crash was a Viewer computing on open.")
-    out.append("  3. rescued_disable_all.nk   -> every node inert; re-enable to find culprit.")
-    out.append("  4. rescued_no_callbacks.nk  -> crash was a knobChanged/autolabel callback.")
-    out.append("  5. rescued_no_viewers_no_roto.nk / rescued_disable_heavy.nk -> corrupt roto / heavy node.")
-    out.append("  6. rescued_no_plugins.nk    -> a missing OFX/plugin node crashes on load.")
-    out.append("  7. rescued_no_postage.nk    -> a postage-stamp thumbnail crashes on load.")
-    out.append("  8. rescued_bisect_first_half.nk / _second_half.nk -> narrow down which half holds the culprit.")
-    out.append("  9. rescued_keep_one_viewer.nk / _disconnect_viewers.nk -> stereo / multi-Viewer crash on open.")
-    out.append(" 10. rescued_strip_non_ascii.nk -> stray non-ASCII bytes broke the parse (only if any were found).")
+    blink = [n for n in nodes if n.klass == "BlinkScript"]
+    out.append("If the script CRASHES THE MOMENT YOU OPEN IT (before you can do")
+    out.append("anything), the cause is at load time - disabling nodes does NOT help,")
+    out.append("because Nuke still builds them. Try in this order:")
+    out.append("  1. rescued_safe_mode.nk     -> START HERE. Viewers removed, callbacks")
+    out.append("                                 stripped, postage off, BlinkScript neutralized.")
+    if blink:
+        out.append("  2. rescued_no_blink.nk      -> %d BlinkScript node(s): their kernel"
+                   % len(blink))
+        out.append("                                 COMPILES on GUI open - a bad kernel crashes")
+        out.append("                                 Nuke instantly. This turns them into NoOps.")
+    out.append("  3. open_paused_*.bat        -> opens with --pause (nothing evaluates).")
+    out.append("  4. rescued_no_viewers.nk    -> crash was a Viewer computing on open.")
+    out.append("  5. rescued_no_callbacks.nk  -> crash was a knobChanged/autolabel callback.")
+    out.append("  6. rescued_no_postage.nk    -> a postage-stamp thumbnail crashes on load.")
+    out.append("  7. rescued_disable_all.nk   -> every node inert; re-enable to find culprit.")
+    out.append("  8. rescued_no_viewers_no_roto.nk / rescued_disable_heavy.nk -> corrupt roto / heavy node.")
+    out.append("  9. rescued_bisect_first_half.nk / _second_half.nk -> narrow down which half holds the culprit.")
+    out.append(" 10. rescued_keep_one_viewer.nk / _disconnect_viewers.nk -> stereo / multi-Viewer crash on open.")
+    out.append(" 11. rescued_no_plugins.nk   -> dotted-class OFX node missing (only made if any exist).")
+    out.append(" 12. rescued_strip_non_ascii.nk -> stray non-ASCII bytes broke the parse (only if any were found).")
     out.append("")
     out.append("Know the offender already? Use Match nodes (by name or knob value) to")
     out.append("disable / disconnect / remove just those, or drop the crash log to auto-target it.")
@@ -178,7 +188,8 @@ def remove_classes(lines: list[str], nodes: list[NodeBlock], classes: set[str]) 
 
 def disable_classes(lines: list[str], nodes: list[NodeBlock], classes,
                     skip: frozenset = frozenset(
-                        {"Root", "Viewer", "Dot", "BackdropNode", "StickyNote"})) -> list[str]:
+                        {"Root", "Viewer", "Dot", "BackdropNode", "StickyNote",
+                         "Input", "Output"})) -> list[str]:
     """Set `disable true` on matching nodes. classes=None means ALL nodes
     (except `skip`, e.g. Root)."""
     out = list(lines)
@@ -239,7 +250,8 @@ def make_pause_bat(out_dir: Path, nuke_exe: str, script_path: Path) -> Path:
 
 
 _HEAVY = {"Roto", "RotoPaint", "VectorBlur", "Defocus", "ZDefocus", "ScanlineRender"}
-_DISABLE_SKIP = frozenset({"Root", "Viewer", "Dot", "BackdropNode", "StickyNote"})
+_DISABLE_SKIP = frozenset({"Root", "Viewer", "Dot", "BackdropNode", "StickyNote",
+                           "Input", "Output"})
 
 
 def disable_nodes(lines: list[str], nodes: list[NodeBlock], subset) -> list[str]:
@@ -301,6 +313,36 @@ def disconnect_viewers(lines: list[str], nodes: list[NodeBlock]) -> list[str]:
 def strip_non_ascii(lines: list[str]) -> list[str]:
     """Drop non-ASCII bytes - stray non-ASCII in a .nk can break the parse."""
     return [line.encode("ascii", "ignore").decode("ascii") for line in lines]
+
+
+_CLASS_LINE_RE = re.compile(r"^(\s*)([A-Za-z_][A-Za-z0-9_\.]*)(\s*\{\s*)$")
+
+
+def reclass_nodes(lines: list[str], nodes: list[NodeBlock], classes,
+                  new_class: str = "NoOp") -> list[str]:
+    """Change the class of matching nodes to `new_class`, keeping name / inputs
+    so the graph still links. The original node never constructs or compiles -
+    used to neutralize a node that crashes on load (e.g. BlinkScript, whose
+    kernel compiles the moment the GUI opens it). Extra knobs just warn."""
+    out = list(lines)
+    for node in nodes:
+        if node.klass not in classes:
+            continue
+        m = _CLASS_LINE_RE.match(out[node.start])
+        if m and m.group(2) == node.klass:
+            out[node.start] = "%s%s%s" % (m.group(1), new_class, m.group(3))
+    return out
+
+
+def safe_mode(lines: list[str], nodes: list[NodeBlock]) -> list[str]:
+    """The 'just open it' rescue: remove Viewers, strip per-node callbacks, turn
+    off postage-stamp thumbnails, and neutralize BlinkScript nodes (GUI compiles
+    their kernel on open). Targets every common open-crash cause at once."""
+    out = remove_classes(lines, nodes, {"Viewer"})
+    out = strip_callbacks(out)
+    out = strip_postage_stamps(out)
+    out = reclass_nodes(out, parse_nodes(out), {"BlinkScript"}, "NoOp")
+    return out
 
 
 def _disconnect_specific(lines: list[str], nodes: list[NodeBlock], subset) -> list[str]:
@@ -439,6 +481,14 @@ def rescue_step(name: str, desc: str):
     return deco
 
 
+rescue_step("safe_mode",
+            "SAFE MODE - no Viewers + no callbacks + no postage + BlinkScript "
+            "neutralized (open-crash catch-all; try this FIRST)")(
+    lambda lines, nodes: safe_mode(lines, nodes))
+rescue_step("no_blink",
+            "Neutralize BlinkScript (its kernel compiles on GUI open - a bad "
+            "kernel crashes Nuke; disable does NOT stop it)")(
+    lambda lines, nodes: reclass_nodes(lines, nodes, {"BlinkScript"}, "NoOp"))
 rescue_step("no_viewers", "Remove all Viewers (Viewer-eval crash)")(
     lambda lines, nodes: remove_classes(lines, nodes, {"Viewer"}))
 rescue_step("no_viewers_no_roto", "Remove Viewers + Roto/RotoPaint (corrupt roto)")(

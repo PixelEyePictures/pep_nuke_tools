@@ -35,6 +35,15 @@ Everything above, plus:
   comes in mirrored.
 - Live **matrix** readout.
 
+---
+
+## CornerPin to Matrix v3  (gizmo `PEP_CornerPinMatrix_v3`)
+
+Everything in v2, plus **edge offsets**:
+- **top / bottom / left / right** (pixels) — push each edge of the pinned quad
+  out (+) or in (−) past the tracked corners for **overscan / edge bleed**,
+  applied to the baked matrix. Leave at 0 for none.
+
 > The panel version (**PEP Tools → CornerPin to Matrix (panel)**) does the same
 > without a node in the graph.
 
@@ -233,11 +242,18 @@ safe, openable copies next to it; the **original is never modified**.
    **original copy**, one **rescued `.nk` per step**, a **paused launcher**
    (`open_paused_….bat`, opens Nuke with `--pause` so nothing evaluates), and any
    **autosaves/backups** found nearby.
-4. Open the report and work **down the recovery order** — start with the paused
-   launcher, then no-Viewers, disable-all, no-callbacks, and so on; each rescued
-   copy isolates one class of load crash (Viewer eval, callback, corrupt Roto,
-   heavy node, missing plugin, postage-stamp thumbnail, stereo/multi-Viewer,
-   stray non-ASCII), with a bisect pass to narrow down which half holds the
+4. Open the report and work **down the recovery order**. If Nuke **crashes the
+   instant you open the scene** (before you can do anything), start with
+   **`rescued_safe_mode.nk`** — it removes Viewers, strips callbacks, kills
+   postage thumbnails and **neutralizes BlinkScript** all at once. If the scene
+   has BlinkScript nodes, **`rescued_no_blink.nk`** is the targeted fix: a
+   BlinkScript's kernel **compiles the moment the GUI opens it**, so a bad kernel
+   crashes Nuke on load and *disabling the node does not help* (Nuke still builds
+   it) — this turns them into NoOps. Then work through the paused launcher,
+   no-Viewers, no-callbacks, disable-all, and so on; each rescued copy isolates
+   one class of load crash (Viewer eval, callback, corrupt Roto, heavy node,
+   BlinkScript compile, missing plugin, postage-stamp thumbnail, stereo/multi-
+   Viewer, stray non-ASCII), with a bisect pass to narrow which half holds the
    culprit.
 
 **Target specific node types.** Press **Analyze script** to list every node type

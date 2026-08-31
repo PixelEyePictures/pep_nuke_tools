@@ -16,6 +16,8 @@ RECURSE    = True                                     # if SCENE_PATH is a folde
 
 # Toggles - flip any to False to skip that rescue.
 RESCUES = {
+    "safe_mode":          True,   # START HERE: no Viewers + no callbacks + no postage + BlinkScript neutralized
+    "no_blink":           True,   # neutralize BlinkScript (its kernel compiles on GUI open; a bad one crashes)
     "no_viewers":         True,   # remove all Viewers (Viewer-eval crash)
     "no_viewers_no_roto": True,   # also remove Roto/RotoPaint (corrupt roto)
     "disable_heavy":      True,   # disable heavy classes only
@@ -262,6 +264,32 @@ def strip_non_ascii(lines):
     return [line.encode("ascii", "ignore").decode("ascii") for line in lines]
 
 
+_CLASS_LINE_RE = re.compile(r"^(\s*)([A-Za-z_][A-Za-z0-9_\.]*)(\s*\{\s*)$")
+
+
+def reclass_nodes(lines, nodes, classes, new_class="NoOp"):
+    # Change the class of matching nodes so they never construct/compile
+    # (e.g. BlinkScript, whose kernel compiles the moment the GUI opens it).
+    out = list(lines)
+    for node in nodes:
+        if node.klass not in classes:
+            continue
+        m = _CLASS_LINE_RE.match(out[node.start])
+        if m and m.group(2) == node.klass:
+            out[node.start] = "%s%s%s" % (m.group(1), new_class, m.group(3))
+    return out
+
+
+def safe_mode(lines, nodes):
+    # The 'just open it' rescue: remove Viewers, strip callbacks, kill postage
+    # thumbnails, and neutralize BlinkScript (GUI compiles its kernel on open).
+    out = remove_classes(lines, nodes, {"Viewer"})
+    out = strip_callbacks(out)
+    out = strip_postage_stamps(out)
+    out = reclass_nodes(out, parse_nodes(out), {"BlinkScript"}, "NoOp")
+    return out
+
+
 def find_autosaves(script_path):
     d = script_path.parent
     stem, name = script_path.stem, script_path.name
@@ -294,6 +322,8 @@ def doctor_script(script_path, out_dir, nuke_exe):
         make_report(script_path, lines, nodes), encoding="utf-8")
     heavy = {"Roto", "RotoPaint", "VectorBlur", "Defocus", "ZDefocus", "ScanlineRender"}
     producers = [
+        ("safe_mode",          lambda: safe_mode(lines, nodes)),
+        ("no_blink",           lambda: reclass_nodes(lines, nodes, {"BlinkScript"}, "NoOp")),
         ("no_viewers",         lambda: remove_classes(lines, nodes, {"Viewer"})),
         ("no_viewers_no_roto", lambda: remove_classes(lines, nodes, {"Viewer", "Roto", "RotoPaint"})),
         ("disable_heavy",      lambda: disable_classes(lines, nodes, heavy)),

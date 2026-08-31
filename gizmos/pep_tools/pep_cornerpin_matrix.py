@@ -96,14 +96,56 @@ def _transpose16(m):
     return [m[c * 4 + r] for r in range(4) for c in range(4)]
 
 
+# CornerPin2D corner order: to1=bottom-left, to2=bottom-right, to3=top-right,
+# to4=top-left. Edges (by corner index pairs) and their offset knob names.
+_EDGES = (("bottom", 0, 1), ("right", 1, 2), ("top", 2, 3), ("left", 3, 0))
+
+
+def _offset_corners(to, top, bottom, left, right):
+    """Push each edge of the quad out (or in) along its outward normal.
+
+    Extends the pinned region past the four tracked corners - handy for
+    overscan / edge bleed. A corner shared by two offset edges moves by both.
+    """
+    import math
+    if not any((top, bottom, left, right)):
+        return to
+    cx = sum(p[0] for p in to) / 4.0
+    cy = sum(p[1] for p in to) / 4.0
+    amt = {"top": top, "bottom": bottom, "left": left, "right": right}
+    off = [[0.0, 0.0] for _ in range(4)]
+    for name, i, j in _EDGES:
+        a, b = to[i], to[j]
+        nx, ny = (b[1] - a[1]), -(b[0] - a[0])          # perpendicular
+        length = math.hypot(nx, ny) or 1.0
+        nx, ny = nx / length, ny / length
+        mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
+        if (mx - cx) * nx + (my - cy) * ny < 0:          # force outward
+            nx, ny = -nx, -ny
+        for k in (i, j):
+            off[k][0] += nx * amt[name]
+            off[k][1] += ny * amt[name]
+    return [(to[k][0] + off[k][0], to[k][1] + off[k][1]) for k in range(4)]
+
+
+def _edge_offsets(cp, frame):
+    """Read the four edge-offset knobs (v3), defaulting to 0 if absent."""
+    def v(name):
+        return cp[name].valueAt(frame) if name in cp.knobs() else 0.0
+    return v("edgeTop"), v("edgeBottom"), v("edgeLeft"), v("edgeRight")
+
+
 def matrix_at(cp, frame, invert, transpose=False):
     """16 floats for the extra-matrix knob, at the given frame.
 
     Reproduces the CornerPin's own direction (honours its 'invert' knob),
     then applies the user's extra invert on top. Optional transpose for
     matrices coming from apps that use the opposite row/column convention.
+    Edge-offset knobs (v3), if present, expand/contract the destination quad.
     """
     frm, to = corners_at(cp, frame)
+    top, bottom, left, right = _edge_offsets(cp, frame)
+    to = _offset_corners(to, top, bottom, left, right)
     h = solve_homography(frm, to)          # from -> to (forward pin)
     cp_invert = bool(cp["invert"].value()) if "invert" in cp.knobs() else False
     if cp_invert != bool(invert):          # XOR
